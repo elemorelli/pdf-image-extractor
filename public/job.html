@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Job detail - PDF Image Extractor</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <nav><a href="/index.html">Upload</a><a href="/jobs.html">Past jobs</a></nav>
+    <h1 id="job-title"></h1>
+    <p>
+      <a id="download-all" href="#">Download all as zip</a>
+      <button id="delete-job">Delete job</button>
+    </p>
+    <h2>Transparent</h2>
+    <div id="transparent-grid" class="grid"></div>
+    <h2>Opaque</h2>
+    <div id="opaque-grid" class="grid"></div>
+    <script type="module" src="/dist/job.js"></script>
+  </body>
+</html>
