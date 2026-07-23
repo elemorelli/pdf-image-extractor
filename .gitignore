@@ -1,0 +1,22 @@
+# Source PDFs
+*.pdf
+
+# Extracted/converted images
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.ppm
+*.pgm
+*.pbm
+*.gif
+*.bmp
+*.tiff
+*.tif
+
+# Temporary/OS files
+*.tmp
+*.temp
+*~
+.DS_Store
+Thumbs.db
