@@ -22,7 +22,7 @@ interface LightboxState {
   index: number;
 }
 
-const jobId = new URLSearchParams(location.search).get('id');
+const jobId = location.pathname.split('/').filter(Boolean).pop() ?? null;
 
 const lightbox = document.getElementById('lightbox') as HTMLDivElement;
 const lightboxImage = document.getElementById('lightbox-image') as HTMLImageElement;
@@ -73,8 +73,8 @@ const deleteJob = async (): Promise<void> => {
     return;
   }
 
-  await fetch(`/jobs/${jobId}`, { method: 'DELETE' });
-  location.href = '/jobs.html';
+  await fetch(`/api/jobs/${jobId}`, { method: 'DELETE' });
+  location.href = '/jobs';
 };
 
 const downloadSelected = async (): Promise<void> => {
@@ -84,7 +84,7 @@ const downloadSelected = async (): Promise<void> => {
     return { subfolder, filename };
   });
 
-  const res = await fetch(`/jobs/${jobId}/download`, {
+  const res = await fetch(`/api/jobs/${jobId}/download`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ files }),
@@ -124,7 +124,7 @@ const deleteSelected = async (): Promise<void> => {
   for (const key of keys) {
     const [subfolder, filename] = key.split('::');
 
-    await fetch(`/jobs/${jobId}/files/${subfolder}/${filename}`, { method: 'DELETE' });
+    await fetch(`/api/jobs/${jobId}/files/${subfolder}/${filename}`, { method: 'DELETE' });
   }
 
   for (const key of keys) {
@@ -199,7 +199,7 @@ const renderToolbar = (): void => {
       <span class="toolbar-count">${total} image${total === 1 ? '' : 's'}</span>
       <div class="toolbar-actions">
         <button id="toggle-select-all" class="btn btn-secondary" type="button" title="${toggleTitle}" aria-label="${toggleTitle}">${toggleIcon}</button>
-        <a href="/jobs/${jobId}/download" class="btn btn-secondary" title="Download all" aria-label="Download all">${icon('download')}</a>
+        <a href="/api/jobs/${jobId}/download" class="btn btn-secondary" title="Download all" aria-label="Download all">${icon('download')}</a>
         <button id="delete-job" class="btn btn-danger" type="button" title="Delete all" aria-label="Delete all">${icon('trash')}</button>
       </div>
     `;
@@ -249,7 +249,7 @@ const renderLightbox = (): void => {
   }
 
   const file = lightboxState.files[lightboxState.index];
-  const src = `/jobs/${jobId}/files/${lightboxState.subfolder}/${file.filename}`;
+  const src = `/api/jobs/${jobId}/files/${lightboxState.subfolder}/${file.filename}`;
   const format = file.filename.split('.').pop()?.toUpperCase() ?? '';
   const resolution = file.width && file.height ? `${file.width}×${file.height}` : null;
   const metaParts = [format, resolution, formatBytes(file.size)].filter(Boolean);
@@ -319,7 +319,7 @@ lightboxDelete.addEventListener('click', async () => {
     return;
   }
 
-  await fetch(`/jobs/${jobId}/files/${subfolder}/${file.filename}`, { method: 'DELETE' });
+  await fetch(`/api/jobs/${jobId}/files/${subfolder}/${file.filename}`, { method: 'DELETE' });
   removeCard(subfolder, file.filename);
   renderToolbar();
 
@@ -337,7 +337,7 @@ const renderGrid = (container: HTMLElement, subfolder: string, files: ImageMeta[
   container.innerHTML = '';
 
   for (const file of files) {
-    const src = `/jobs/${jobId}/files/${subfolder}/${file.filename}`;
+    const src = `/api/jobs/${jobId}/files/${subfolder}/${file.filename}`;
     const resolution = file.width && file.height ? `${file.width}×${file.height}` : null;
     const wrapper = document.createElement('div');
 
@@ -390,7 +390,7 @@ const renderGrid = (container: HTMLElement, subfolder: string, files: ImageMeta[
         return;
       }
 
-      await fetch(`/jobs/${jobId}/files/${subfolder}/${file.filename}`, { method: 'DELETE' });
+      await fetch(`/api/jobs/${jobId}/files/${subfolder}/${file.filename}`, { method: 'DELETE' });
       removeCard(subfolder, file.filename);
       renderToolbar();
     });
@@ -420,7 +420,7 @@ opaqueSectionSelectAll.addEventListener('change', () => {
 });
 
 const load = async (): Promise<void> => {
-  const res = await fetch(`/jobs/${jobId}`);
+  const res = await fetch(`/api/jobs/${jobId}`);
   const job = (await res.json()) as JobDetail;
 
   originalName = job.originalName;

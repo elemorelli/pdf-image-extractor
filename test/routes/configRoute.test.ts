@@ -6,7 +6,7 @@ test('GET /config returns the configured max upload size', async () => {
   const { server, baseUrl } = await startTestServer();
 
   try {
-    const res = await fetch(`${baseUrl}/config`);
+    const res = await fetch(`${baseUrl}/api/config`);
     const body = (await res.json()) as { maxUploadBytes: number };
 
     assert.equal(res.status, 200);

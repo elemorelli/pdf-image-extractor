@@ -15,7 +15,7 @@ test('POST /extract creates a job and processes it via the injected runner', asy
     );
     form.append('webp', 'false');
 
-    const res = await fetch(`${baseUrl}/extract`, { method: 'POST', body: form });
+    const res = await fetch(`${baseUrl}/api/extract`, { method: 'POST', body: form });
 
     assert.equal(res.status, 200);
     const { jobId } = (await res.json()) as { jobId: string };
@@ -38,7 +38,7 @@ test('POST /extract rejects a non-pdf upload', async () => {
     const form = new FormData();
 
     form.append('pdf', new Blob([Buffer.from('not a pdf')], { type: 'text/plain' }), 'sample.txt');
-    const res = await fetch(`${baseUrl}/extract`, { method: 'POST', body: form });
+    const res = await fetch(`${baseUrl}/api/extract`, { method: 'POST', body: form });
 
     assert.equal(res.status, 400);
   } finally {

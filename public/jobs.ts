@@ -88,13 +88,13 @@ const render = (): void => {
     const tr = document.createElement('tr');
 
     tr.innerHTML = `
-      <td><a href="/job.html?id=${job.jobId}">${job.originalName}</a></td>
+      <td><a href="/jobs/${job.jobId}">${job.originalName}</a></td>
       <td>${formatDate(job.uploadedAt)}</td>
       <td><span class="badge ${badgeClass}">${job.status}</span></td>
       <td class="col-center">${imageCount(job)}</td>
       <td class="col-center">${job.totalSize ? formatBytes(job.totalSize) : '—'}</td>
       <td>
-        <a href="/jobs/${job.jobId}/download" class="btn btn-secondary" title="Download zip" aria-label="Download zip">${icon('download')}</a>
+        <a href="/api/jobs/${job.jobId}/download" class="btn btn-secondary" title="Download zip" aria-label="Download zip">${icon('download')}</a>
         <button data-id="${job.jobId}" class="btn btn-danger delete-button" title="Delete" aria-label="Delete">${icon('trash')}</button>
       </td>
     `;
@@ -109,14 +109,14 @@ const render = (): void => {
 
       const jobId = (button as HTMLElement).dataset.id;
 
-      await fetch(`/jobs/${jobId}`, { method: 'DELETE' });
+      await fetch(`/api/jobs/${jobId}`, { method: 'DELETE' });
       await loadJobs();
     });
   });
 };
 
 const loadJobs = async (): Promise<void> => {
-  const res = await fetch('/jobs');
+  const res = await fetch('/api/jobs');
 
   allJobs = (await res.json()) as JobSummary[];
   render();

@@ -67,7 +67,7 @@ interface JobDetail {
 // the next request lands.
 export const waitForJobDone = async (baseUrl: string, jobId: string): Promise<JobDetail> => {
   for (;;) {
-    const res = await fetch(`${baseUrl}/jobs/${jobId}`);
+    const res = await fetch(`${baseUrl}/api/jobs/${jobId}`);
     const detail = (await res.json()) as JobDetail;
 
     if (detail.status !== 'processing') {

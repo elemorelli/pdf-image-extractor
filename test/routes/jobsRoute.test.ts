@@ -20,7 +20,7 @@ test('GET /jobs/:jobId returns image metadata for each extracted file', async ()
     await fsp.writeFile(path.join(jobDir, 'transparent', 'a.png'), TINY_PNG);
     await jobStore.updateJob(jobId, { status: 'done', transparentCount: 1, opaqueCount: 0 });
 
-    const res = await fetch(`${baseUrl}/jobs/${jobId}`);
+    const res = await fetch(`${baseUrl}/api/jobs/${jobId}`);
     const detail = (await res.json()) as { transparent: unknown };
 
     assert.deepEqual(detail.transparent, [
@@ -39,11 +39,11 @@ test('DELETE /jobs/:jobId removes the job', async () => {
 
     await jobStore.updateJob(jobId, { status: 'done' });
 
-    const delRes = await fetch(`${baseUrl}/jobs/${jobId}`, { method: 'DELETE' });
+    const delRes = await fetch(`${baseUrl}/api/jobs/${jobId}`, { method: 'DELETE' });
 
     assert.equal(delRes.status, 204);
 
-    const getRes = await fetch(`${baseUrl}/jobs/${jobId}`);
+    const getRes = await fetch(`${baseUrl}/api/jobs/${jobId}`);
 
     assert.equal(getRes.status, 404);
   } finally {

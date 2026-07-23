@@ -16,7 +16,7 @@ test('GET /jobs/:jobId/download returns a zip attachment', async () => {
     await fsp.writeFile(path.join(jobDir, 'transparent', 'a.png'), 'fake-png');
     await jobStore.updateJob(jobId, { status: 'done' });
 
-    const res = await fetch(`${baseUrl}/jobs/${jobId}/download`);
+    const res = await fetch(`${baseUrl}/api/jobs/${jobId}/download`);
 
     assert.equal(res.status, 200);
     assert.match(res.headers.get('content-disposition') || '', /attachment/);
@@ -41,7 +41,7 @@ test('POST /jobs/:jobId/download returns a zip of only the requested files', asy
     await fsp.writeFile(path.join(jobDir, 'transparent', 'b.png'), 'fake-png-b');
     await jobStore.updateJob(jobId, { status: 'done' });
 
-    const res = await fetch(`${baseUrl}/jobs/${jobId}/download`, {
+    const res = await fetch(`${baseUrl}/api/jobs/${jobId}/download`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ files: [{ subfolder: 'transparent', filename: 'a.png' }] }),
@@ -65,7 +65,7 @@ test('POST /jobs/:jobId/download 400s when no valid files are given', async () =
 
     await jobStore.updateJob(jobId, { status: 'done' });
 
-    const res = await fetch(`${baseUrl}/jobs/${jobId}/download`, {
+    const res = await fetch(`${baseUrl}/api/jobs/${jobId}/download`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ files: [] }),

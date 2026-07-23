@@ -14,7 +14,7 @@ test('DELETE .../files/:subfolder/:filename 409s while the job is still processi
     await fsp.mkdir(path.join(jobStore.jobDir(jobId), 'transparent'), { recursive: true });
     await fsp.writeFile(path.join(jobStore.jobDir(jobId), 'transparent', 'a.png'), 'fake-png');
 
-    const res = await fetch(`${baseUrl}/jobs/${jobId}/files/transparent/a.png`, {
+    const res = await fetch(`${baseUrl}/api/jobs/${jobId}/files/transparent/a.png`, {
       method: 'DELETE',
     });
 
@@ -35,7 +35,7 @@ test('DELETE .../files/:subfolder/:filename removes the file and decrements the 
     await fsp.writeFile(path.join(jobDir, 'transparent', 'a.png'), 'fake-png');
     await jobStore.updateJob(jobId, { status: 'done', transparentCount: 1, opaqueCount: 0 });
 
-    const res = await fetch(`${baseUrl}/jobs/${jobId}/files/transparent/a.png`, {
+    const res = await fetch(`${baseUrl}/api/jobs/${jobId}/files/transparent/a.png`, {
       method: 'DELETE',
     });
 
@@ -67,7 +67,7 @@ test('DELETE .../files/:subfolder/:filename decrements totalSize by the deleted 
       totalSize: 'fake-png'.length + 'fake-png-2'.length,
     });
 
-    const res = await fetch(`${baseUrl}/jobs/${jobId}/files/transparent/a.png`, {
+    const res = await fetch(`${baseUrl}/api/jobs/${jobId}/files/transparent/a.png`, {
       method: 'DELETE',
     });
 

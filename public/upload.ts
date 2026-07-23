@@ -59,7 +59,7 @@ let maxUploadBytes: number | null = null;
 let stages: string[] = BASE_STAGES;
 
 const loadConfig = async (): Promise<void> => {
-  const res = await fetch('/config');
+  const res = await fetch('/api/config');
   const config = (await res.json()) as Config;
 
   maxUploadBytes = config.maxUploadBytes;
@@ -199,7 +199,7 @@ const closeStream = (): void => {
 };
 
 const startStream = (jobId: string): void => {
-  eventSource = new EventSource(`/status/${jobId}/stream`);
+  eventSource = new EventSource(`/api/status/${jobId}/stream`);
 
   eventSource.onmessage = (event) => {
     const status = JSON.parse(event.data) as StatusEvent;
@@ -214,7 +214,7 @@ const startStream = (jobId: string): void => {
 
     if (status.done) {
       closeStream();
-      location.href = `/job.html?id=${jobId}`;
+      location.href = `/jobs/${jobId}`;
 
       return;
     }
@@ -244,7 +244,7 @@ form.addEventListener('submit', async (event) => {
 
   formData.set('webp', webp ? 'true' : 'false');
 
-  const res = await fetch('/extract', { method: 'POST', body: formData });
+  const res = await fetch('/api/extract', { method: 'POST', body: formData });
 
   if (!res.ok) {
     errorText.textContent = 'Upload failed.';
@@ -273,7 +273,7 @@ cancelButton.addEventListener('click', async () => {
   }
 
   closeStream();
-  await fetch(`/jobs/${currentJobId}`, { method: 'DELETE' });
+  await fetch(`/api/jobs/${currentJobId}`, { method: 'DELETE' });
   location.reload();
 });
 
