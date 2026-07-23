@@ -247,22 +247,35 @@ td:last-child {
   font-size: 1.3rem;
   font-weight: 700;
   padding: var(--space-2) 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.section summary[hidden] {
+  display: none;
 }
 
 .section summary::-webkit-details-marker {
   display: none;
 }
 
-.section summary::before {
-  content: '▸';
-  display: inline-block;
-  width: 1em;
+.section-icon {
+  display: inline-flex;
+  align-items: center;
   color: var(--color-text-muted);
   transition: transform 0.15s ease;
 }
 
-.section[open] summary::before {
+.section[open] .section-icon {
   transform: rotate(90deg);
+}
+
+.section-select-all {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--color-accent);
+  cursor: pointer;
 }
 
 /* ==== Image grid ==== */

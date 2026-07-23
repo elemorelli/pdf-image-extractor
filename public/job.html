@@ -14,12 +14,30 @@
     </header>
     <h1 id="job-title"></h1>
     <div id="job-toolbar" class="job-toolbar"></div>
-    <details class="section" open>
-      <summary>Transparent</summary>
+    <details id="transparent-section" class="section" open>
+      <summary>
+        <input
+          type="checkbox"
+          id="transparent-select-all"
+          class="section-select-all"
+          aria-label="Select all transparent images"
+        />
+        <span class="section-icon"></span>
+        Transparent
+      </summary>
       <div id="transparent-grid" class="grid"></div>
     </details>
-    <details class="section" open>
-      <summary>Opaque</summary>
+    <details id="opaque-section" class="section" open>
+      <summary>
+        <input
+          type="checkbox"
+          id="opaque-select-all"
+          class="section-select-all"
+          aria-label="Select all opaque images"
+        />
+        <span class="section-icon"></span>
+        Opaque
+      </summary>
       <div id="opaque-grid" class="grid"></div>
     </details>
     <div id="lightbox" class="lightbox" hidden>

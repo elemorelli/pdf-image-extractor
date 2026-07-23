@@ -34,6 +34,16 @@ const lightboxClose = document.getElementById('lightbox-close') as HTMLButtonEle
 const lightboxPrev = document.getElementById('lightbox-prev') as HTMLButtonElement;
 const lightboxNext = document.getElementById('lightbox-next') as HTMLButtonElement;
 const jobToolbar = document.getElementById('job-toolbar') as HTMLDivElement;
+const transparentSection = document.getElementById('transparent-section') as HTMLDetailsElement;
+const opaqueSection = document.getElementById('opaque-section') as HTMLDetailsElement;
+const transparentSectionSelectAll = document.getElementById(
+  'transparent-select-all',
+) as HTMLInputElement;
+const opaqueSectionSelectAll = document.getElementById('opaque-select-all') as HTMLInputElement;
+
+document.querySelectorAll<HTMLElement>('.section-icon').forEach((el) => {
+  el.innerHTML = icon('chevron-right', 12);
+});
 
 lightboxClose.innerHTML = icon('xmark', 20);
 lightboxPrev.innerHTML = icon('chevron-left', 24);
@@ -135,6 +145,44 @@ const toggleSelectAll = (): void => {
   });
 };
 
+const updateSections = (): void => {
+  const transparentEmpty = transparentFiles.length === 0;
+  const opaqueEmpty = opaqueFiles.length === 0;
+
+  transparentSection.hidden = transparentEmpty;
+  opaqueSection.hidden = opaqueEmpty;
+
+  const onlyOneVisible = transparentEmpty !== opaqueEmpty;
+  const transparentSummary = transparentSection.querySelector('summary') as HTMLElement;
+  const opaqueSummary = opaqueSection.querySelector('summary') as HTMLElement;
+
+  transparentSummary.hidden = onlyOneVisible && !transparentEmpty;
+  opaqueSummary.hidden = onlyOneVisible && !opaqueEmpty;
+
+  if (transparentSummary.hidden) {
+    transparentSection.open = true;
+  }
+
+  if (opaqueSummary.hidden) {
+    opaqueSection.open = true;
+  }
+
+  const sectionSelectedCount = (files: ImageMeta[], subfolder: string): number =>
+    files.filter((file) => selected.has(selectionKey(subfolder, file.filename))).length;
+
+  const transparentSelected = sectionSelectedCount(transparentFiles, 'transparent');
+
+  transparentSectionSelectAll.checked =
+    transparentFiles.length > 0 && transparentSelected === transparentFiles.length;
+  transparentSectionSelectAll.indeterminate =
+    transparentSelected > 0 && transparentSelected < transparentFiles.length;
+
+  const opaqueSelected = sectionSelectedCount(opaqueFiles, 'opaque');
+
+  opaqueSectionSelectAll.checked = opaqueFiles.length > 0 && opaqueSelected === opaqueFiles.length;
+  opaqueSectionSelectAll.indeterminate = opaqueSelected > 0 && opaqueSelected < opaqueFiles.length;
+};
+
 const renderToolbar = (): void => {
   const total = totalFileCount();
   const count = selected.size;
@@ -142,6 +190,7 @@ const renderToolbar = (): void => {
   const toggleIcon = allSelected ? icon('square') : icon('square-check');
   const toggleTitle = allSelected ? 'Clear selection' : 'Select all';
 
+  updateSections();
   document.body.classList.toggle('selecting', count > 0);
 
   if (count === 0) {
@@ -351,6 +400,23 @@ const renderGrid = (container: HTMLElement, subfolder: string, files: ImageMeta[
 const jobTitle = document.getElementById('job-title') as HTMLHeadingElement;
 const transparentGrid = document.getElementById('transparent-grid') as HTMLDivElement;
 const opaqueGrid = document.getElementById('opaque-grid') as HTMLDivElement;
+
+const toggleSectionSelection = (container: HTMLElement, checked: boolean): void => {
+  container.querySelectorAll<HTMLInputElement>('.thumb-select').forEach((checkbox) => {
+    checkbox.checked = checked;
+    checkbox.dispatchEvent(new Event('change'));
+  });
+};
+
+transparentSectionSelectAll.addEventListener('click', (event) => event.stopPropagation());
+transparentSectionSelectAll.addEventListener('change', () => {
+  toggleSectionSelection(transparentGrid, transparentSectionSelectAll.checked);
+});
+
+opaqueSectionSelectAll.addEventListener('click', (event) => event.stopPropagation());
+opaqueSectionSelectAll.addEventListener('change', () => {
+  toggleSectionSelection(opaqueGrid, opaqueSectionSelectAll.checked);
+});
 
 const load = async (): Promise<void> => {
   const res = await fetch(`/jobs/${jobId}`);
