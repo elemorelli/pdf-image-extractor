@@ -7,7 +7,7 @@
 set -euo pipefail
 
 DRY_RUN=true
-QUALITY=80
+QUALITY=90
 TARGET_DIR="."
 
 for arg in "$@"; do

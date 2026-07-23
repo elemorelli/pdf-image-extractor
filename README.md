@@ -1,6 +1,6 @@
 # PDF Image Extractor
 
-Extracts images from a PDF, recombining any that have a soft mask (transparency) into proper transparent PNGs, and optionally converts the result to webp. A Linux replacement for an old Windows batch script that relied on bundled `.exe` tools.
+Extracts images from a PDF, recombining any that have a soft mask (transparency) into proper transparent PNGs, and optionally converts the result to webp.
 
 ## Requirements
 
@@ -40,7 +40,7 @@ Converts jpg/png images in a single directory to webp, deleting the originals. D
 ```
 ./webp_convert.sh <dir>              # dry run, just reports what it would do
 ./webp_convert.sh --apply <dir>      # actually converts and deletes
-./webp_convert.sh --apply --quality=90 <dir>
+./webp_convert.sh --apply --quality=80 <dir>
 ```
 
 Converts in place, `pic.png` becomes `pic.webp` in the same directory. Skips a file if its `.webp` already exists, so re-running is cheap.
