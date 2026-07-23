@@ -12,6 +12,8 @@ export const formatBytes = (bytes: number): string => {
   return `${(kb / 1024).toFixed(1)} MB`;
 };
 
+export const stripPdfExtension = (name: string): string => name.replace(/\.pdf$/i, '');
+
 export const formatDate = (iso: string): string => {
   const date = new Date(iso);
   const pad = (n: number): string => String(n).padStart(2, '0');

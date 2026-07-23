@@ -1,7 +1,7 @@
 import path from 'node:path';
 import fsp from 'node:fs/promises';
 import { Router } from 'express';
-import { isValidJobId } from '../validate.ts';
+import { requireValidJobId, getJobOrNotFound } from '../routeHelpers.ts';
 import { readImageMetaForFiles } from '../imageMeta.ts';
 import type { JobStore } from '../jobStore.ts';
 import type { JobRunner, AuditLogWriter } from '../jobRunner.ts';
@@ -22,20 +22,11 @@ export const createJobsRoute = ({ jobStore, jobRunner, auditLog }: JobsRouteDeps
     res.json(await jobStore.listJobs());
   });
 
-  router.get('/:jobId', async (req, res) => {
+  router.get('/:jobId', requireValidJobId, async (req, res) => {
     const { jobId } = req.params;
-
-    if (!isValidJobId(jobId)) {
-      res.status(404).end();
-
-      return;
-    }
-
-    const job = await jobStore.getJob(jobId);
+    const job = await getJobOrNotFound(jobStore, jobId, res);
 
     if (!job) {
-      res.status(404).end();
-
       return;
     }
 
@@ -52,20 +43,11 @@ export const createJobsRoute = ({ jobStore, jobRunner, auditLog }: JobsRouteDeps
     res.json({ ...job, transparent, opaque });
   });
 
-  router.delete('/:jobId', async (req, res) => {
+  router.delete('/:jobId', requireValidJobId, async (req, res) => {
     const { jobId } = req.params;
-
-    if (!isValidJobId(jobId)) {
-      res.status(404).end();
-
-      return;
-    }
-
-    const job = await jobStore.getJob(jobId);
+    const job = await getJobOrNotFound(jobStore, jobId, res);
 
     if (!job) {
-      res.status(404).end();
-
       return;
     }
 

@@ -1,4 +1,4 @@
-import { formatBytes } from './lib/format';
+import { formatBytes, stripPdfExtension } from './lib/format';
 import { confirmDialog } from './lib/confirmDialog';
 import { icon } from './lib/icons';
 
@@ -68,6 +68,10 @@ const filesFor = (subfolder: string): ImageMeta[] =>
 
 const totalFileCount = (): number => transparentFiles.length + opaqueFiles.length;
 
+const deleteFile = async (subfolder: string, filename: string): Promise<void> => {
+  await fetch(`/api/jobs/${jobId}/files/${subfolder}/${filename}`, { method: 'DELETE' });
+};
+
 const deleteJob = async (): Promise<void> => {
   if (!(await confirmDialog('Delete this job and all of its images?', 'Delete job'))) {
     return;
@@ -95,7 +99,7 @@ const downloadSelected = async (): Promise<void> => {
   const link = document.createElement('a');
 
   link.href = url;
-  link.download = `${originalName.replace(/\.pdf$/i, '')}-selected.zip`;
+  link.download = `${stripPdfExtension(originalName)}-selected.zip`;
   link.click();
   URL.revokeObjectURL(url);
 };
@@ -124,7 +128,7 @@ const deleteSelected = async (): Promise<void> => {
   for (const key of keys) {
     const [subfolder, filename] = key.split('::');
 
-    await fetch(`/api/jobs/${jobId}/files/${subfolder}/${filename}`, { method: 'DELETE' });
+    await deleteFile(subfolder, filename);
   }
 
   for (const key of keys) {
@@ -136,14 +140,18 @@ const deleteSelected = async (): Promise<void> => {
   renderToolbar();
 };
 
+const setCheckboxes = (checkboxes: NodeListOf<HTMLInputElement>, checked: boolean): void => {
+  checkboxes.forEach((checkbox) => {
+    checkbox.checked = checked;
+    checkbox.dispatchEvent(new Event('change'));
+  });
+};
+
 const toggleSelectAll = (): void => {
   const checkboxes = document.querySelectorAll<HTMLInputElement>('.thumb-select');
   const shouldSelectAll = selected.size < checkboxes.length;
 
-  checkboxes.forEach((checkbox) => {
-    checkbox.checked = shouldSelectAll;
-    checkbox.dispatchEvent(new Event('change'));
-  });
+  setCheckboxes(checkboxes, shouldSelectAll);
 };
 
 const updateSections = (): void => {
@@ -190,6 +198,7 @@ const renderToolbar = (): void => {
   const allSelected = total > 0 && count === total;
   const toggleIcon = allSelected ? icon('square') : icon('square-check');
   const toggleTitle = allSelected ? 'Clear selection' : 'Select all';
+  const toggleButtonHtml = `<button id="toggle-select-all" class="btn btn-secondary" type="button" title="${toggleTitle}" aria-label="${toggleTitle}">${toggleIcon}</button>`;
 
   updateSections();
   document.body.classList.toggle('selecting', count > 0);
@@ -198,37 +207,37 @@ const renderToolbar = (): void => {
     jobToolbar.innerHTML = `
       <span class="toolbar-count">${total} image${total === 1 ? '' : 's'}</span>
       <div class="toolbar-actions">
-        <button id="toggle-select-all" class="btn btn-secondary" type="button" title="${toggleTitle}" aria-label="${toggleTitle}">${toggleIcon}</button>
+        ${toggleButtonHtml}
         <a href="/api/jobs/${jobId}/download" class="btn btn-secondary" title="Download all" aria-label="Download all">${icon('download')}</a>
         <button id="delete-job" class="btn btn-danger" type="button" title="Delete all" aria-label="Delete all">${icon('trash')}</button>
       </div>
     `;
 
-    const toggleSelectAllButton = document.getElementById('toggle-select-all') as HTMLButtonElement;
     const deleteJobButton = document.getElementById('delete-job') as HTMLButtonElement;
 
-    toggleSelectAllButton.addEventListener('click', toggleSelectAll);
     deleteJobButton.addEventListener('click', deleteJob);
+  } else {
+    jobToolbar.innerHTML = `
+      <span class="toolbar-count">${count} of ${total} selected</span>
+      <div class="toolbar-actions">
+        ${toggleButtonHtml}
+        <button id="download-selected" class="btn btn-secondary" type="button" title="Download selected" aria-label="Download selected">${icon('download')}</button>
+        <button id="delete-selected" class="btn btn-danger" type="button" title="Delete selected" aria-label="Delete selected">${icon('trash')}</button>
+      </div>
+    `;
 
-    return;
+    const downloadSelectedButton = document.getElementById(
+      'download-selected',
+    ) as HTMLButtonElement;
+    const deleteSelectedButton = document.getElementById('delete-selected') as HTMLButtonElement;
+
+    downloadSelectedButton.addEventListener('click', downloadSelected);
+    deleteSelectedButton.addEventListener('click', deleteSelected);
   }
 
-  jobToolbar.innerHTML = `
-    <span class="toolbar-count">${count} of ${total} selected</span>
-    <div class="toolbar-actions">
-      <button id="toggle-select-all" class="btn btn-secondary" type="button" title="${toggleTitle}" aria-label="${toggleTitle}">${toggleIcon}</button>
-      <button id="download-selected" class="btn btn-secondary" type="button" title="Download selected" aria-label="Download selected">${icon('download')}</button>
-      <button id="delete-selected" class="btn btn-danger" type="button" title="Delete selected" aria-label="Delete selected">${icon('trash')}</button>
-    </div>
-  `;
-
   const toggleSelectAllButton = document.getElementById('toggle-select-all') as HTMLButtonElement;
-  const downloadSelectedButton = document.getElementById('download-selected') as HTMLButtonElement;
-  const deleteSelectedButton = document.getElementById('delete-selected') as HTMLButtonElement;
 
   toggleSelectAllButton.addEventListener('click', toggleSelectAll);
-  downloadSelectedButton.addEventListener('click', downloadSelected);
-  deleteSelectedButton.addEventListener('click', deleteSelected);
 };
 
 const removeCard = (subfolder: string, filename: string): void => {
@@ -319,7 +328,7 @@ lightboxDelete.addEventListener('click', async () => {
     return;
   }
 
-  await fetch(`/api/jobs/${jobId}/files/${subfolder}/${file.filename}`, { method: 'DELETE' });
+  await deleteFile(subfolder, file.filename);
   removeCard(subfolder, file.filename);
   renderToolbar();
 
@@ -390,7 +399,7 @@ const renderGrid = (container: HTMLElement, subfolder: string, files: ImageMeta[
         return;
       }
 
-      await fetch(`/api/jobs/${jobId}/files/${subfolder}/${file.filename}`, { method: 'DELETE' });
+      await deleteFile(subfolder, file.filename);
       removeCard(subfolder, file.filename);
       renderToolbar();
     });
@@ -403,10 +412,7 @@ const transparentGrid = document.getElementById('transparent-grid') as HTMLDivEl
 const opaqueGrid = document.getElementById('opaque-grid') as HTMLDivElement;
 
 const toggleSectionSelection = (container: HTMLElement, checked: boolean): void => {
-  container.querySelectorAll<HTMLInputElement>('.thumb-select').forEach((checkbox) => {
-    checkbox.checked = checked;
-    checkbox.dispatchEvent(new Event('change'));
-  });
+  setCheckboxes(container.querySelectorAll<HTMLInputElement>('.thumb-select'), checked);
 };
 
 transparentSectionSelectAll.addEventListener('click', (event) => event.stopPropagation());

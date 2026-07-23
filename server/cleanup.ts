@@ -10,16 +10,9 @@ export const sweepExpiredJobs = async (
   { maxAgeMs, now = Date.now() }: SweepOptions,
 ): Promise<string[]> => {
   const jobs = await jobStore.listJobs();
-  const deleted: string[] = [];
+  const expired = jobs.filter((job) => now - Date.parse(job.uploadedAt) > maxAgeMs);
 
-  for (const job of jobs) {
-    const uploadedAt = Date.parse(job.uploadedAt);
+  await Promise.all(expired.map((job) => jobStore.deleteJob(job.jobId)));
 
-    if (now - uploadedAt > maxAgeMs) {
-      await jobStore.deleteJob(job.jobId);
-      deleted.push(job.jobId);
-    }
-  }
-
-  return deleted;
+  return expired.map((job) => job.jobId);
 };

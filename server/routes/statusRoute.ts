@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { isValidJobId } from '../validate.ts';
+import { requireValidJobId } from '../routeHelpers.ts';
+import { isJobFinished } from '../jobStore.ts';
 import type { JobStore } from '../jobStore.ts';
 import type { JobRunner, ProgressEvent, DoneEvent } from '../jobRunner.ts';
 
@@ -13,15 +14,8 @@ export interface StatusRouteDeps {
 export const createStatusRoute = ({ jobStore, jobRunner }: StatusRouteDeps): Router => {
   const router = Router();
 
-  router.get('/status/:jobId', async (req, res) => {
+  router.get('/status/:jobId', requireValidJobId, async (req, res) => {
     const { jobId } = req.params;
-
-    if (!isValidJobId(jobId)) {
-      res.status(404).end();
-
-      return;
-    }
-
     const live = jobRunner.getLiveProgress(jobId);
 
     if (live) {
@@ -41,20 +35,13 @@ export const createStatusRoute = ({ jobStore, jobRunner }: StatusRouteDeps): Rou
     res.json({
       stage: null,
       progress: null,
-      done: job.status === 'done' || job.status === 'error',
+      done: isJobFinished(job),
       error: job.status === 'error' ? job.error : null,
     });
   });
 
-  router.get('/status/:jobId/stream', async (req, res) => {
+  router.get('/status/:jobId/stream', requireValidJobId, async (req, res) => {
     const { jobId } = req.params;
-
-    if (!isValidJobId(jobId)) {
-      res.status(404).end();
-
-      return;
-    }
-
     const live = jobRunner.getLiveProgress(jobId);
     const job = live ? null : await jobStore.getJob(jobId);
 
@@ -107,7 +94,7 @@ export const createStatusRoute = ({ jobStore, jobRunner }: StatusRouteDeps): Rou
     jobRunner.events.on('done', onDone);
     req.on('close', cleanup);
 
-    if (job && (job.status === 'done' || job.status === 'error')) {
+    if (job && isJobFinished(job)) {
       onDone({ jobId, error: job.status === 'error' ? (job.error ?? null) : null });
 
       return;

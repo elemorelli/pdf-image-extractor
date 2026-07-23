@@ -1,7 +1,8 @@
 import path from 'node:path';
 import express, { Router } from 'express';
 import { ZipArchive } from 'archiver';
-import { isValidJobId, isValidSubfolder, isValidFilename } from '../validate.ts';
+import { isValidSubfolder, isValidFilename } from '../validate.ts';
+import { requireValidJobId, getJobOrNotFound } from '../routeHelpers.ts';
 import type { JobStore } from '../jobStore.ts';
 
 export interface DownloadRouteDeps {
@@ -19,28 +20,21 @@ const isSelectedFile = (value: unknown): value is SelectedFile =>
   isValidSubfolder((value as Record<string, unknown>).subfolder) &&
   isValidFilename((value as Record<string, unknown>).filename);
 
+const stripPdfExtension = (name: string): string => name.replace(/\.pdf$/i, '');
+
 // Mounted at /jobs.
 export const createDownloadRoute = ({ jobStore }: DownloadRouteDeps): Router => {
   const router = Router();
 
-  router.get('/:jobId/download', async (req, res) => {
+  router.get('/:jobId/download', requireValidJobId, async (req, res) => {
     const { jobId } = req.params;
-
-    if (!isValidJobId(jobId)) {
-      res.status(404).end();
-
-      return;
-    }
-
-    const job = await jobStore.getJob(jobId);
+    const job = await getJobOrNotFound(jobStore, jobId, res);
 
     if (!job) {
-      res.status(404).end();
-
       return;
     }
 
-    res.attachment(`${job.originalName.replace(/\.pdf$/i, '')}.zip`);
+    res.attachment(`${stripPdfExtension(job.originalName)}.zip`);
     const archive = new ZipArchive();
 
     archive.pipe(res);
@@ -51,20 +45,11 @@ export const createDownloadRoute = ({ jobStore }: DownloadRouteDeps): Router => 
     await archive.finalize();
   });
 
-  router.post('/:jobId/download', express.json(), async (req, res) => {
+  router.post('/:jobId/download', requireValidJobId, express.json(), async (req, res) => {
     const { jobId } = req.params;
-
-    if (!isValidJobId(jobId)) {
-      res.status(404).end();
-
-      return;
-    }
-
-    const job = await jobStore.getJob(jobId);
+    const job = await getJobOrNotFound(jobStore, jobId, res);
 
     if (!job) {
-      res.status(404).end();
-
       return;
     }
 
@@ -77,7 +62,7 @@ export const createDownloadRoute = ({ jobStore }: DownloadRouteDeps): Router => 
       return;
     }
 
-    res.attachment(`${job.originalName.replace(/\.pdf$/i, '')}-selected.zip`);
+    res.attachment(`${stripPdfExtension(job.originalName)}-selected.zip`);
     const archive = new ZipArchive();
 
     archive.pipe(res);

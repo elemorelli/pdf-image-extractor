@@ -2,6 +2,7 @@ import path from 'node:path';
 import fsp from 'node:fs/promises';
 import { Router } from 'express';
 import { isValidJobId, isValidSubfolder, isValidFilename } from '../validate.ts';
+import { getJobOrNotFound } from '../routeHelpers.ts';
 import type { JobStore } from '../jobStore.ts';
 
 export interface JobFilesRouteDeps {
@@ -40,11 +41,9 @@ export const createJobFilesRoute = ({ jobStore }: JobFilesRouteDeps): Router => 
       return;
     }
 
-    const job = await jobStore.getJob(jobId);
+    const job = await getJobOrNotFound(jobStore, jobId, res);
 
     if (!job) {
-      res.status(404).end();
-
       return;
     }
 

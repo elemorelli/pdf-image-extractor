@@ -54,6 +54,13 @@
   box-sizing: border-box;
 }
 
+/* Some classes below set their own `display`, which would otherwise win over
+   the `hidden` attribute's UA-stylesheet `display: none`. Force it here
+   once for every element instead of overriding per class. */
+[hidden] {
+  display: none !important;
+}
+
 body {
   font-family: system-ui, sans-serif;
   max-width: 800px;
@@ -252,10 +259,6 @@ td:last-child {
   gap: var(--space-2);
 }
 
-.section summary[hidden] {
-  display: none;
-}
-
 .section summary::-webkit-details-marker {
   display: none;
 }
@@ -340,6 +343,7 @@ td:last-child {
   aspect-ratio: 1 / 1;
   object-fit: cover;
   display: block;
+  cursor: zoom-in;
 }
 
 .thumb-meta {
@@ -377,10 +381,6 @@ td:last-child {
 }
 
 /* ==== Lightbox ==== */
-.thumb-card img {
-  cursor: zoom-in;
-}
-
 body.selecting .thumb-card img {
   cursor: pointer;
 }
@@ -394,10 +394,6 @@ body.selecting .thumb-card img {
   justify-content: center;
   z-index: 100;
   cursor: pointer;
-}
-
-.lightbox[hidden] {
-  display: none;
 }
 
 .lightbox-figure {
@@ -537,10 +533,6 @@ body.selecting .thumb-card img {
   align-items: center;
   justify-content: center;
   gap: var(--space-3);
-}
-
-.dropzone-file[hidden] {
-  display: none;
 }
 
 .text-muted {

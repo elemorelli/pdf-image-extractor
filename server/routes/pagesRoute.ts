@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { Router } from 'express';
-import { isValidJobId } from '../validate.ts';
+import { requireValidJobId } from '../routeHelpers.ts';
 
 export interface PagesRouteDeps {
   publicDir: string;
@@ -19,13 +19,7 @@ export const createPagesRoute = ({ publicDir }: PagesRouteDeps): Router => {
     res.sendFile(path.join(publicDir, 'jobs.html'));
   });
 
-  router.get('/jobs/:jobId', (req, res) => {
-    if (!isValidJobId(req.params.jobId)) {
-      res.status(404).end();
-
-      return;
-    }
-
+  router.get('/jobs/:jobId', requireValidJobId, (_req, res) => {
     res.sendFile(path.join(publicDir, 'job.html'));
   });
 

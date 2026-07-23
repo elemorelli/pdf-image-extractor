@@ -2,17 +2,21 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
+export type JobStatus = 'processing' | 'done' | 'error';
+
 export interface Job {
   jobId: string;
   originalName: string;
   uploadedAt: string;
-  status: string;
+  status: JobStatus;
   webp: boolean;
   error?: string;
   transparentCount?: number;
   opaqueCount?: number;
   totalSize?: number;
 }
+
+export const isJobFinished = (job: Job): boolean => job.status === 'done' || job.status === 'error';
 
 export interface NewJobParams {
   originalName: string;
@@ -78,19 +82,11 @@ export const createJobStore = (baseDir: string): JobStore => {
 
       throw err;
     }
-    const jobs: Job[] = [];
+    const loaded = await Promise.all(
+      entries.filter((entry) => entry.isDirectory()).map((entry) => getJob(entry.name)),
+    );
+    const jobs = loaded.filter((job): job is Job => job !== null);
 
-    for (const entry of entries) {
-      if (!entry.isDirectory()) {
-        continue;
-      }
-
-      const job = await getJob(entry.name);
-
-      if (job) {
-        jobs.push(job);
-      }
-    }
     jobs.sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
 
     return jobs;
