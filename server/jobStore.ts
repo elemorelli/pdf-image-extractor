@@ -11,6 +11,7 @@ export interface Job {
   error?: string;
   transparentCount?: number;
   opaqueCount?: number;
+  totalSize?: number;
 }
 
 export interface NewJobParams {

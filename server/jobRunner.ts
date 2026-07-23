@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { parseProgressLine } from './progressParser.ts';
+import { readImageMetaForFiles } from './imageMeta.ts';
 import type { JobStore } from './jobStore.ts';
 
 export interface AuditLogWriter {
@@ -140,10 +141,20 @@ export const createJobRunner = (
       ]);
 
       if (code === 0) {
+        const [transparentMeta, opaqueMeta] = await Promise.all([
+          readImageMetaForFiles(path.join(outdir, 'transparent'), transparent),
+          readImageMetaForFiles(path.join(outdir, 'opaque'), opaque),
+        ]);
+        const totalSize = [...transparentMeta, ...opaqueMeta].reduce(
+          (sum, file) => sum + file.size,
+          0,
+        );
+
         await jobStore.updateJob(jobId, {
           status: 'done',
           transparentCount: transparent.length,
           opaqueCount: opaque.length,
+          totalSize,
         });
         await auditLog.log({ type: 'done', jobId, originalName });
         events.emit('done', { jobId, error: null });

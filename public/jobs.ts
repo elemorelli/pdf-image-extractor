@@ -1,5 +1,6 @@
 import { confirmDialog } from './lib/confirmDialog';
 import { icon } from './lib/icons';
+import { formatBytes, formatDate } from './lib/format';
 
 interface JobSummary {
   jobId: string;
@@ -8,9 +9,10 @@ interface JobSummary {
   status: string;
   transparentCount?: number;
   opaqueCount?: number;
+  totalSize?: number;
 }
 
-type SortKey = 'originalName' | 'uploadedAt' | 'status' | 'images';
+type SortKey = 'originalName' | 'uploadedAt' | 'status' | 'images' | 'size';
 
 const STATUS_BADGE_CLASS: Record<string, string> = {
   done: 'badge-done',
@@ -32,6 +34,10 @@ const imageCount = (job: JobSummary): number =>
 const sortValue = (job: JobSummary, key: SortKey): string | number => {
   if (key === 'images') {
     return imageCount(job);
+  }
+
+  if (key === 'size') {
+    return job.totalSize || 0;
   }
 
   if (key === 'uploadedAt') {
@@ -83,12 +89,13 @@ const render = (): void => {
 
     tr.innerHTML = `
       <td><a href="/job.html?id=${job.jobId}">${job.originalName}</a></td>
-      <td>${new Date(job.uploadedAt).toLocaleString()}</td>
+      <td>${formatDate(job.uploadedAt)}</td>
       <td><span class="badge ${badgeClass}">${job.status}</span></td>
-      <td>${imageCount(job)}</td>
+      <td class="col-center">${imageCount(job)}</td>
+      <td class="col-center">${job.totalSize ? formatBytes(job.totalSize) : '—'}</td>
       <td>
-        <a href="/jobs/${job.jobId}/download" class="btn btn-secondary">${icon('download')}Download zip</a>
-        <button data-id="${job.jobId}" class="btn btn-danger delete-button">${icon('trash')}Delete</button>
+        <a href="/jobs/${job.jobId}/download" class="btn btn-secondary" title="Download zip" aria-label="Download zip">${icon('download')}</a>
+        <button data-id="${job.jobId}" class="btn btn-danger delete-button" title="Delete" aria-label="Delete">${icon('trash')}</button>
       </td>
     `;
     tbody.appendChild(tr);

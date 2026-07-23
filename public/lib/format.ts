@@ -11,3 +11,12 @@ export const formatBytes = (bytes: number): string => {
 
   return `${(kb / 1024).toFixed(1)} MB`;
 };
+
+export const formatDate = (iso: string): string => {
+  const date = new Date(iso);
+  const pad = (n: number): string => String(n).padStart(2, '0');
+  const datePart = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  const timePart = `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+
+  return `${datePart} ${timePart}`;
+};

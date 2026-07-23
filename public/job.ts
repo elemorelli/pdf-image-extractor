@@ -38,8 +38,12 @@ const jobToolbar = document.getElementById('job-toolbar') as HTMLDivElement;
 lightboxClose.innerHTML = icon('xmark', 20);
 lightboxPrev.innerHTML = icon('chevron-left', 24);
 lightboxNext.innerHTML = icon('chevron-right', 24);
-lightboxDownload.innerHTML = `${icon('download')}Download`;
-lightboxDelete.innerHTML = `${icon('trash')}Delete`;
+lightboxDownload.innerHTML = icon('download');
+lightboxDownload.title = 'Download';
+lightboxDownload.setAttribute('aria-label', 'Download');
+lightboxDelete.innerHTML = icon('trash');
+lightboxDelete.title = 'Delete';
+lightboxDelete.setAttribute('aria-label', 'Delete');
 
 let lightboxState: LightboxState | null = null;
 let originalName = '';
