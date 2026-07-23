@@ -10,6 +10,11 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
+    },
+  },
+  {
     files: ['server/**/*.ts', 'test/**/*.ts', 'scripts/**/*.js'],
     languageOptions: {
       globals: globals.node,
