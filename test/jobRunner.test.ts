@@ -85,7 +85,7 @@ test('start() marks job error with the last stderr line on failure', async () =>
   assert.equal(job.error, 'boom');
 });
 
-test('cancel() kills a running job and clears its live progress', async () => {
+test('cancel() kills a running job and eventually clears its live progress', async () => {
   const jobStore = createJobStore(fs.mkdtempSync(path.join(os.tmpdir(), 'jobrunner-store-')));
   const auditLog = makeFakeAuditLog();
   const scriptPath = writeFakeScript('sleep 5');
@@ -97,7 +97,45 @@ test('cancel() kills a running job and clears its live progress', async () => {
   await new Promise((resolve) => setTimeout(resolve, 50));
 
   assert.equal(runner.cancel(jobId), true);
-  assert.equal(runner.getLiveProgress(jobId), null);
+
+  for (;;) {
+    if (runner.getLiveProgress(jobId) === null) {
+      break;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+});
+
+test('cancel() does not crash when the job dir is deleted before the process exits', async () => {
+  const jobStore = createJobStore(fs.mkdtempSync(path.join(os.tmpdir(), 'jobrunner-store-')));
+  const auditLog = makeFakeAuditLog();
+  const scriptPath = writeFakeScript('sleep 5');
+  const runner = createJobRunner(jobStore, auditLog, scriptPath);
+  const jobId = await jobStore.createJob({ originalName: 'x.pdf', webp: false });
+  const pdfPath = makeTempPdfPath();
+
+  const doneEvents: unknown[] = [];
+
+  runner.events.on('done', (payload) => doneEvents.push(payload));
+
+  runner.start(jobId, { pdfPath, webp: false, originalName: 'x.pdf' });
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  assert.equal(runner.cancel(jobId), true);
+  // Mirrors what DELETE /jobs/:id does right away, without waiting for the
+  // killed process to actually exit.
+  await jobStore.deleteJob(jobId);
+
+  for (;;) {
+    if (doneEvents.length > 0) {
+      break;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+
+  assert.deepEqual(doneEvents, [{ jobId, error: 'cancelled' }]);
 });
 
 test('start() emits progress and done events over jobRunner.events', async () => {

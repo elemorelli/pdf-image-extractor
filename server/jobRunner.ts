@@ -42,6 +42,7 @@ interface LiveEntry {
   stage: string | null;
   item: string | null;
   child: ChildProcess;
+  cancelled: boolean;
 }
 
 const readdirSafe = async (dir: string): Promise<string[]> => {
@@ -76,7 +77,7 @@ export const createJobRunner = (
 
     const child = spawn(scriptPath, args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
-    live.set(jobId, { stage: null, item: null, child });
+    live.set(jobId, { stage: null, item: null, child, cancelled: false });
 
     let stdoutBuffer = '';
 
@@ -114,13 +115,24 @@ export const createJobRunner = (
     });
 
     child.on('close', async (code) => {
+      const entry = live.get(jobId);
+
       live.delete(jobId);
+      await fsp.rm(pdfPath, { force: true });
+
+      // A cancelled job's directory is already gone by the time the killed
+      // process actually exits (the DELETE route removes it right away, not
+      // waiting for SIGTERM to land), so there's no metadata left to update.
+      if (entry?.cancelled) {
+        events.emit('done', { jobId, error: 'cancelled' });
+
+        return;
+      }
+
       const [transparent, opaque] = await Promise.all([
         readdirSafe(path.join(outdir, 'transparent')),
         readdirSafe(path.join(outdir, 'opaque')),
       ]);
-
-      await fsp.rm(pdfPath, { force: true });
 
       if (code === 0) {
         await jobStore.updateJob(jobId, {
@@ -158,8 +170,8 @@ export const createJobRunner = (
       return false;
     }
 
+    entry.cancelled = true;
     entry.child.kill('SIGTERM');
-    live.delete(jobId);
 
     return true;
   };
