@@ -54,12 +54,19 @@ export const createJobFilesRoute = ({ jobStore }: JobFilesRouteDeps): Router => 
       return;
     }
 
-    await fsp.rm(path.join(jobStore.jobDir(jobId), subfolder, filename), { force: true });
+    const filePath = path.join(jobStore.jobDir(jobId), subfolder, filename);
+    const stat = await fsp.stat(filePath).catch(() => null);
+
+    await fsp.rm(filePath, { force: true });
 
     const countKey = subfolder === 'transparent' ? 'transparentCount' : 'opaqueCount';
     const currentCount = job[countKey] || 0;
+    const currentTotalSize = job.totalSize || 0;
 
-    await jobStore.updateJob(jobId, { [countKey]: Math.max(0, currentCount - 1) });
+    await jobStore.updateJob(jobId, {
+      [countKey]: Math.max(0, currentCount - 1),
+      totalSize: Math.max(0, currentTotalSize - (stat?.size ?? 0)),
+    });
 
     res.status(204).end();
   });

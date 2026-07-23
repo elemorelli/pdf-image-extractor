@@ -49,3 +49,34 @@ test('DELETE .../files/:subfolder/:filename removes the file and decrements the 
     server.close();
   }
 });
+
+test('DELETE .../files/:subfolder/:filename decrements totalSize by the deleted file size', async () => {
+  const { server, baseUrl, jobStore } = await startTestServer();
+
+  try {
+    const jobId = await jobStore.createJob({ originalName: 'x.pdf', webp: false });
+    const jobDir = jobStore.jobDir(jobId);
+
+    await fsp.mkdir(path.join(jobDir, 'transparent'), { recursive: true });
+    await fsp.writeFile(path.join(jobDir, 'transparent', 'a.png'), 'fake-png');
+    await fsp.writeFile(path.join(jobDir, 'transparent', 'b.png'), 'fake-png-2');
+    await jobStore.updateJob(jobId, {
+      status: 'done',
+      transparentCount: 2,
+      opaqueCount: 0,
+      totalSize: 'fake-png'.length + 'fake-png-2'.length,
+    });
+
+    const res = await fetch(`${baseUrl}/jobs/${jobId}/files/transparent/a.png`, {
+      method: 'DELETE',
+    });
+
+    assert.equal(res.status, 204);
+
+    const job = await jobStore.getJob(jobId);
+
+    assert.equal(job?.totalSize, 'fake-png-2'.length);
+  } finally {
+    server.close();
+  }
+});
