@@ -1,5 +1,6 @@
 import { formatBytes } from './lib/format';
 import { confirmDialog } from './lib/confirmDialog';
+import { icon } from './lib/icons';
 
 interface ImageMeta {
   filename: string;
@@ -33,6 +34,12 @@ const lightboxClose = document.getElementById('lightbox-close') as HTMLButtonEle
 const lightboxPrev = document.getElementById('lightbox-prev') as HTMLButtonElement;
 const lightboxNext = document.getElementById('lightbox-next') as HTMLButtonElement;
 const jobToolbar = document.getElementById('job-toolbar') as HTMLDivElement;
+
+lightboxClose.innerHTML = icon('xmark', 20);
+lightboxPrev.innerHTML = icon('chevron-left', 24);
+lightboxNext.innerHTML = icon('chevron-right', 24);
+lightboxDownload.innerHTML = `${icon('download')}Download`;
+lightboxDelete.innerHTML = `${icon('trash')}Delete`;
 
 let lightboxState: LightboxState | null = null;
 let originalName = '';
@@ -128,7 +135,8 @@ const renderToolbar = (): void => {
   const total = totalFileCount();
   const count = selected.size;
   const allSelected = total > 0 && count === total;
-  const toggleLabel = allSelected ? 'Clear selection' : 'Select all';
+  const toggleIcon = allSelected ? icon('square') : icon('square-check');
+  const toggleTitle = allSelected ? 'Clear selection' : 'Select all';
 
   document.body.classList.toggle('selecting', count > 0);
 
@@ -136,9 +144,9 @@ const renderToolbar = (): void => {
     jobToolbar.innerHTML = `
       <span class="toolbar-count">${total} image${total === 1 ? '' : 's'}</span>
       <div class="toolbar-actions">
-        <button id="toggle-select-all" class="btn btn-secondary" type="button">${toggleLabel}</button>
-        <a href="/jobs/${jobId}/download" class="btn btn-secondary">Download all</a>
-        <button id="delete-job" class="btn btn-danger" type="button">Delete all</button>
+        <button id="toggle-select-all" class="btn btn-secondary" type="button" title="${toggleTitle}" aria-label="${toggleTitle}">${toggleIcon}</button>
+        <a href="/jobs/${jobId}/download" class="btn btn-secondary" title="Download all" aria-label="Download all">${icon('download')}</a>
+        <button id="delete-job" class="btn btn-danger" type="button" title="Delete all" aria-label="Delete all">${icon('trash')}</button>
       </div>
     `;
 
@@ -154,9 +162,9 @@ const renderToolbar = (): void => {
   jobToolbar.innerHTML = `
     <span class="toolbar-count">${count} of ${total} selected</span>
     <div class="toolbar-actions">
-      <button id="toggle-select-all" class="btn btn-secondary" type="button">${toggleLabel}</button>
-      <button id="download-selected" class="btn btn-secondary" type="button">Download selected</button>
-      <button id="delete-selected" class="btn btn-danger" type="button">Delete selected</button>
+      <button id="toggle-select-all" class="btn btn-secondary" type="button" title="${toggleTitle}" aria-label="${toggleTitle}">${toggleIcon}</button>
+      <button id="download-selected" class="btn btn-secondary" type="button" title="Download selected" aria-label="Download selected">${icon('download')}</button>
+      <button id="delete-selected" class="btn btn-danger" type="button" title="Delete selected" aria-label="Delete selected">${icon('trash')}</button>
     </div>
   `;
 
@@ -289,8 +297,8 @@ const renderGrid = (container: HTMLElement, subfolder: string, files: ImageMeta[
         <div class="thumb-meta-size">${formatBytes(file.size)}</div>
       </div>
       <div class="thumb-overlay">
-        <a href="${src}" download class="btn btn-icon" aria-label="Download">&#8595;</a>
-        <button type="button" class="btn btn-icon delete-button" aria-label="Delete">&times;</button>
+        <a href="${src}" download class="btn btn-icon" aria-label="Download">${icon('download')}</a>
+        <button type="button" class="btn btn-icon delete-button" aria-label="Delete">${icon('trash')}</button>
       </div>
     `;
 

@@ -1,4 +1,5 @@
 import { confirmDialog } from './lib/confirmDialog';
+import { icon } from './lib/icons';
 
 interface JobSummary {
   jobId: string;
@@ -86,8 +87,8 @@ const render = (): void => {
       <td><span class="badge ${badgeClass}">${job.status}</span></td>
       <td>${imageCount(job)}</td>
       <td>
-        <a href="/jobs/${job.jobId}/download" class="btn btn-secondary">Download zip</a>
-        <button data-id="${job.jobId}" class="btn btn-danger delete-button">Delete</button>
+        <a href="/jobs/${job.jobId}/download" class="btn btn-secondary">${icon('download')}Download zip</a>
+        <button data-id="${job.jobId}" class="btn btn-danger delete-button">${icon('trash')}Delete</button>
       </td>
     `;
     tbody.appendChild(tr);

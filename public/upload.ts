@@ -1,5 +1,6 @@
 import { formatBytes } from './lib/format';
 import { confirmDialog } from './lib/confirmDialog';
+import { icon } from './lib/icons';
 
 interface ExtractResponse {
   jobId: string;
@@ -49,6 +50,8 @@ const progressBarFill = document.getElementById('progress-bar-fill') as HTMLDivE
 const progressText = document.getElementById('progress-text') as HTMLParagraphElement;
 const errorText = document.getElementById('error-text') as HTMLParagraphElement;
 const cancelButton = document.getElementById('cancel-button') as HTMLButtonElement;
+
+dropzoneClear.innerHTML = icon('xmark', 14);
 
 let currentJobId: string | null = null;
 let eventSource: EventSource | null = null;

@@ -50,3 +50,4 @@ Converts in place, `pic.png` becomes `pic.webp` in the same directory. Skips a f
 - `pdf_extract.sh` only reads the source PDF, it is never modified or deleted.
 - Everything destructive happens inside the generated per-PDF folder.
 - `.gitignore` excludes PDFs, extracted/converted images, and common temp files, so only the scripts themselves are meant to be tracked in git.
+- Web UI icons are from [Font Awesome Free](https://fontawesome.com/license/free) (CC BY 4.0).
