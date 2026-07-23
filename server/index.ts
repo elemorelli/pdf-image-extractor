@@ -6,7 +6,7 @@ import { createJobRunner } from './jobRunner.ts';
 import { createAuditLog } from './auditLog.ts';
 import { sweepExpiredJobs } from './cleanup.ts';
 
-const DATA_DIR = process.env.DATA_DIR || '/data';
+const DATA_DIR = path.resolve(process.env.DATA_DIR || '/data');
 const PORT = Number(process.env.PORT) || 3000;
 const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB) || 200;
 const RETENTION_HOURS = Number(process.env.RETENTION_HOURS) || 24;
