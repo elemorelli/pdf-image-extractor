@@ -37,18 +37,17 @@ do_convert_webp() {
 	local dir="$1" file="$2"
 	local dst="${file%.*}.webp"
 
-	if [[ -e "$dir/webp/$dst" ]]; then
-		echo "SKIP (exists): $dir/$file -> $dir/webp/$dst"
+	if [[ -e "$dir/$dst" ]]; then
+		echo "SKIP (exists): $dir/$file -> $dir/$dst"
 		return
 	fi
 
 	if $DRY_RUN; then
-		echo "[DRY-RUN] CONVERT $dir/$file -> $dir/webp/$dst"
+		echo "[DRY-RUN] CONVERT $dir/$file -> $dir/$dst"
 	else
-		mkdir -p "$dir/webp"
-		cwebp -q "$QUALITY" "$dir/$file" -o "$dir/webp/$dst" -mt -quiet
+		cwebp -q "$QUALITY" "$dir/$file" -o "$dir/$dst" -mt -quiet
 		rm -f "$dir/$file"
-		echo "Converted $dir/$file -> $dir/webp/$dst"
+		echo "Converted $dir/$file -> $dir/$dst"
 	fi
 }
 
