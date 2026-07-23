@@ -92,7 +92,7 @@ while IFS= read -r f; do
 	i=$((i + 1))
 	printf '\r  %d/%d %s' "$i" "$total_images" "$(basename "$f")"
 	emit_progress "extract" "$i" "$total_images"
-done < <(pdfimages -print-filenames "$pdf" "$folder/$prefix")
+done < <(stdbuf -oL pdfimages -print-filenames "$pdf" "$folder/$prefix")
 ((total_images > 0)) && printf '\n'
 
 (

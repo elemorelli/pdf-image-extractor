@@ -1,6 +1,6 @@
 FROM node:24-alpine
 
-RUN apk add --no-cache bash poppler-utils imagemagick libwebp-tools
+RUN apk add --no-cache bash coreutils poppler-utils imagemagick libwebp-tools
 
 WORKDIR /app
 
