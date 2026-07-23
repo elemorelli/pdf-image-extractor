@@ -2,6 +2,7 @@ import os from 'node:os';
 import path from 'node:path';
 import express, { type Application } from 'express';
 import { createExtractRoute } from './routes/extractRoute.ts';
+import { createConfigRoute } from './routes/configRoute.ts';
 import { createStatusRoute } from './routes/statusRoute.ts';
 import { createJobsRoute } from './routes/jobsRoute.ts';
 import { createJobFilesRoute } from './routes/jobFilesRoute.ts';
@@ -37,6 +38,7 @@ export const createApp = ({
 
   app.use(express.static(path.join(import.meta.dirname, '..', 'public')));
 
+  app.use(createConfigRoute({ maxUploadBytes }));
   app.use(createExtractRoute({ jobStore, jobRunner, auditLog, maxUploadBytes, uploadTmpDir }));
   app.use(createStatusRoute({ jobStore, jobRunner }));
   app.use('/jobs', createJobsRoute({ jobStore, jobRunner, auditLog }));
