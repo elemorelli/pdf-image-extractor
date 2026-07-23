@@ -6,7 +6,7 @@ export interface ProgressUpdate {
   total?: number;
 }
 
-export function parseProgressLine(line: unknown): ProgressUpdate | null {
+export const parseProgressLine = (line: unknown): ProgressUpdate | null => {
   if (typeof line !== 'string' || !line.startsWith(PREFIX)) return null;
 
   let payload: unknown;
@@ -29,4 +29,4 @@ export function parseProgressLine(line: unknown): ProgressUpdate | null {
   if (typeof p.done === 'number') result.done = p.done;
   if (typeof p.total === 'number') result.total = p.total;
   return result;
-}
+};
