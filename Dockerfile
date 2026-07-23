@@ -21,4 +21,7 @@ ENV PORT=3000
 EXPOSE 3000
 VOLUME /data
 
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s \
+  CMD wget -qO- "http://localhost:${PORT}/api/config" || exit 1
+
 CMD ["node", "server/index.ts"]

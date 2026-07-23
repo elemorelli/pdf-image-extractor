@@ -5,3 +5,4 @@ test
 test-helpers
 public/dist
 *.pdf
+data
