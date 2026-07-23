@@ -100,6 +100,30 @@ test('cancel() kills a running job and clears its live progress', async () => {
   assert.equal(runner.getLiveProgress(jobId), null);
 });
 
+test('start() emits progress and done events over jobRunner.events', async () => {
+  const jobStore = createJobStore(fs.mkdtempSync(path.join(os.tmpdir(), 'jobrunner-store-')));
+  const auditLog = makeFakeAuditLog();
+  const scriptPath = writeFakeScript(
+    'echo \'##PROGRESS##{"stage":"extract","done":1,"total":2}\'\n' + 'exit 0',
+  );
+  const runner = createJobRunner(jobStore, auditLog, scriptPath);
+  const jobId = await jobStore.createJob({ originalName: 'x.pdf', webp: false });
+  const pdfPath = makeTempPdfPath();
+
+  const progressEvents: unknown[] = [];
+  const doneEvents: unknown[] = [];
+
+  runner.events.on('progress', (payload) => progressEvents.push(payload));
+  runner.events.on('done', (payload) => doneEvents.push(payload));
+
+  runner.start(jobId, { pdfPath, webp: false, originalName: 'x.pdf' });
+
+  await waitForJobToFinish(jobStore, jobId);
+
+  assert.deepEqual(progressEvents, [{ jobId, stage: 'extract', item: '1/2' }]);
+  assert.deepEqual(doneEvents, [{ jobId, error: null }]);
+});
+
 test('cancel() returns false for a job that is not running', () => {
   const jobStore = createJobStore(fs.mkdtempSync(path.join(os.tmpdir(), 'jobrunner-store-')));
   const auditLog = makeFakeAuditLog();

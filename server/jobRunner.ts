@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import { EventEmitter } from 'node:events';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { parseProgressLine } from './progressParser.ts';
@@ -19,10 +20,22 @@ export interface LiveProgress {
   item: string | null;
 }
 
+export interface ProgressEvent {
+  jobId: string;
+  stage: string | null;
+  item: string | null;
+}
+
+export interface DoneEvent {
+  jobId: string;
+  error: string | null;
+}
+
 export interface JobRunner {
   start(jobId: string, params: StartParams): void;
   getLiveProgress(jobId: string): LiveProgress | null;
   cancel(jobId: string): boolean;
+  events: EventEmitter;
 }
 
 interface LiveEntry {
@@ -45,6 +58,11 @@ export const createJobRunner = (
   scriptPath: string,
 ): JobRunner => {
   const live = new Map<string, LiveEntry>();
+  const events = new EventEmitter();
+
+  // Unbounded: every job that's being watched over SSE adds a listener, and
+  // concurrent job count isn't bounded by anything this emitter knows about.
+  events.setMaxListeners(0);
 
   const start = (jobId: string, { pdfPath, webp, originalName }: StartParams): void => {
     const outdir = jobStore.jobDir(jobId);
@@ -85,6 +103,7 @@ export const createJobRunner = (
           progress.done !== undefined && progress.total !== undefined
             ? `${progress.done}/${progress.total}`
             : null;
+        events.emit('progress', { jobId, stage: entry.stage, item: entry.item });
       }
     });
 
@@ -110,12 +129,14 @@ export const createJobRunner = (
           opaqueCount: opaque.length,
         });
         await auditLog.log({ type: 'done', jobId, originalName });
+        events.emit('done', { jobId, error: null });
       } else {
         const lastLine =
           stderrTail.trim().split('\n').filter(Boolean).pop() || `exited with code ${code}`;
 
         await jobStore.updateJob(jobId, { status: 'error', error: lastLine });
         await auditLog.log({ type: 'error', jobId, originalName, error: lastLine });
+        events.emit('done', { jobId, error: lastLine });
       }
     });
   };
@@ -143,5 +164,5 @@ export const createJobRunner = (
     return true;
   };
 
-  return { start, getLiveProgress, cancel };
+  return { start, getLiveProgress, cancel, events };
 };

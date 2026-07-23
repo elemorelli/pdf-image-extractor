@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import os from 'node:os';
@@ -12,20 +13,27 @@ export const makeFakeAuditLog = () => ({
 });
 
 // Mimics createJobRunner's real behavior (write transparent/opaque files,
-// mark the job done) without spawning pdf_extract.sh, so route tests can
-// exercise the full extract -> status -> detail flow quickly and offline.
-export const makeFakeJobRunner = (jobStore: JobStore): JobRunner => ({
-  start: async (jobId: string, _params: StartParams) => {
-    const jobDir = jobStore.jobDir(jobId);
+// mark the job done, emit the same events) without spawning pdf_extract.sh,
+// so route tests can exercise the full extract -> status -> detail flow
+// (including SSE) quickly and offline.
+export const makeFakeJobRunner = (jobStore: JobStore): JobRunner => {
+  const events = new EventEmitter();
 
-    await fsp.mkdir(path.join(jobDir, 'transparent'), { recursive: true });
-    await fsp.mkdir(path.join(jobDir, 'opaque'), { recursive: true });
-    await fsp.writeFile(path.join(jobDir, 'transparent', 'a.png'), 'fake-png');
-    await jobStore.updateJob(jobId, { status: 'done', transparentCount: 1, opaqueCount: 0 });
-  },
-  getLiveProgress: (): LiveProgress | null => null,
-  cancel: (): boolean => false,
-});
+  return {
+    start: async (jobId: string, _params: StartParams) => {
+      const jobDir = jobStore.jobDir(jobId);
+
+      await fsp.mkdir(path.join(jobDir, 'transparent'), { recursive: true });
+      await fsp.mkdir(path.join(jobDir, 'opaque'), { recursive: true });
+      await fsp.writeFile(path.join(jobDir, 'transparent', 'a.png'), 'fake-png');
+      await jobStore.updateJob(jobId, { status: 'done', transparentCount: 1, opaqueCount: 0 });
+      events.emit('done', { jobId, error: null });
+    },
+    getLiveProgress: (): LiveProgress | null => null,
+    cancel: (): boolean => false,
+    events,
+  };
+};
 
 export const startTestServer = async () => {
   const baseDir = fs.mkdtempSync(path.join(os.tmpdir(), 'routes-test-'));

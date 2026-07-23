@@ -2,7 +2,7 @@ interface ExtractResponse {
   jobId: string;
 }
 
-interface StatusResponse {
+interface StatusEvent {
   stage: string | null;
   item: string | null;
   done: boolean;
@@ -16,22 +16,32 @@ const errorText = document.getElementById('error-text') as HTMLParagraphElement;
 const cancelButton = document.getElementById('cancel-button') as HTMLButtonElement;
 
 let currentJobId: string | null = null;
-let pollTimer: ReturnType<typeof setTimeout> | null = null;
+let eventSource: EventSource | null = null;
 
-const poll = (delay: number): void => {
-  pollTimer = setTimeout(async () => {
-    const res = await fetch(`/status/${currentJobId}`);
-    const status = (await res.json()) as StatusResponse;
+const closeStream = (): void => {
+  if (eventSource) {
+    eventSource.close();
+    eventSource = null;
+  }
+};
+
+const startStream = (jobId: string): void => {
+  eventSource = new EventSource(`/status/${jobId}/stream`);
+
+  eventSource.onmessage = (event) => {
+    const status = JSON.parse(event.data) as StatusEvent;
 
     if (status.error) {
       errorText.textContent = `Failed: ${status.error}`;
       progressBox.hidden = true;
+      closeStream();
 
       return;
     }
 
     if (status.done) {
-      location.href = `/job.html?id=${currentJobId}`;
+      closeStream();
+      location.href = `/job.html?id=${jobId}`;
 
       return;
     }
@@ -39,8 +49,11 @@ const poll = (delay: number): void => {
     progressText.textContent = status.item
       ? `${status.stage}: ${status.item}`
       : status.stage || 'Working...';
-    poll(Math.min(delay + 2000, 15000));
-  }, delay);
+  };
+
+  eventSource.onerror = () => {
+    closeStream();
+  };
 };
 
 form.addEventListener('submit', async (event) => {
@@ -64,7 +77,7 @@ form.addEventListener('submit', async (event) => {
   currentJobId = jobId;
   form.hidden = true;
   progressBox.hidden = false;
-  poll(5000);
+  startStream(jobId);
 });
 
 cancelButton.addEventListener('click', async () => {
@@ -72,10 +85,7 @@ cancelButton.addEventListener('click', async () => {
     return;
   }
 
-  if (pollTimer !== null) {
-    clearTimeout(pollTimer);
-  }
-
+  closeStream();
   await fetch(`/jobs/${currentJobId}`, { method: 'DELETE' });
   location.reload();
 });

@@ -7,14 +7,24 @@ export interface ProgressUpdate {
 }
 
 export const parseProgressLine = (line: unknown): ProgressUpdate | null => {
-  if (typeof line !== 'string' || !line.startsWith(PREFIX)) {
+  if (typeof line !== 'string') {
+    return null;
+  }
+
+  // The shell scripts write a human-readable `\r`-based counter immediately
+  // before each ##PROGRESS## line with no newline in between, so on the wire
+  // they arrive as one line: "<counter text>##PROGRESS##{...}". The prefix
+  // isn't necessarily at index 0 — find it wherever it lands.
+  const prefixIndex = line.lastIndexOf(PREFIX);
+
+  if (prefixIndex === -1) {
     return null;
   }
 
   let payload: unknown;
 
   try {
-    payload = JSON.parse(line.slice(PREFIX.length));
+    payload = JSON.parse(line.slice(prefixIndex + PREFIX.length));
   } catch {
     return null;
   }
