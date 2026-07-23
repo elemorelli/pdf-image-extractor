@@ -82,6 +82,8 @@ h2 {
 .app-header .app-name {
   font-weight: 700;
   font-size: 1.1rem;
+  color: var(--color-text);
+  text-decoration: none;
 }
 
 .app-header nav {
@@ -235,6 +237,10 @@ td {
 }
 
 /* ==== Dropzone & form controls ==== */
+#upload-form {
+  text-align: center;
+}
+
 .dropzone {
   border: 2px dashed var(--color-border);
   border-radius: var(--radius-md);
@@ -262,6 +268,10 @@ td {
   gap: var(--space-3);
 }
 
+.dropzone-file[hidden] {
+  display: none;
+}
+
 .text-muted {
   color: var(--color-text-muted);
   font-size: 0.9rem;
@@ -273,18 +283,12 @@ td {
   margin: 0 0 var(--space-3);
 }
 
-.field-hint {
-  color: var(--color-text-muted);
-  font-size: 0.85rem;
-  margin: var(--space-1) 0 var(--space-4);
-}
-
 .toggle {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   cursor: pointer;
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-4);
 }
 
 .toggle input {
