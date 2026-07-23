@@ -1,4 +1,5 @@
 import { formatBytes } from './lib/format';
+import { confirmDialog } from './lib/confirmDialog';
 
 interface ExtractResponse {
   jobId: string;
@@ -261,6 +262,10 @@ form.addEventListener('submit', async (event) => {
 
 cancelButton.addEventListener('click', async () => {
   if (!currentJobId) {
+    return;
+  }
+
+  if (!(await confirmDialog('Cancel this job? Progress will be lost.', 'Cancel job'))) {
     return;
   }
 

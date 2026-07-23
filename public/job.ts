@@ -1,4 +1,5 @@
 import { formatBytes } from './lib/format';
+import { confirmDialog } from './lib/confirmDialog';
 
 interface ImageMeta {
   filename: string;
@@ -24,6 +25,8 @@ const jobId = new URLSearchParams(location.search).get('id');
 
 const lightbox = document.getElementById('lightbox') as HTMLDivElement;
 const lightboxImage = document.getElementById('lightbox-image') as HTMLImageElement;
+const lightboxFilename = document.getElementById('lightbox-filename') as HTMLSpanElement;
+const lightboxMeta = document.getElementById('lightbox-meta') as HTMLSpanElement;
 const lightboxDownload = document.getElementById('lightbox-download') as HTMLAnchorElement;
 const lightboxDelete = document.getElementById('lightbox-delete') as HTMLButtonElement;
 const lightboxClose = document.getElementById('lightbox-close') as HTMLButtonElement;
@@ -45,7 +48,7 @@ const filesFor = (subfolder: string): ImageMeta[] =>
 const totalFileCount = (): number => transparentFiles.length + opaqueFiles.length;
 
 const deleteJob = async (): Promise<void> => {
-  if (!confirm('Delete this job?')) {
+  if (!(await confirmDialog('Delete this job and all of its images?', 'Delete job'))) {
     return;
   }
 
@@ -83,7 +86,12 @@ const deleteSelected = async (): Promise<void> => {
     return;
   }
 
-  if (!confirm(`Delete ${selected.size} selected image(s)?`)) {
+  const confirmed = await confirmDialog(
+    `Delete ${selected.size} selected image(s)?`,
+    'Delete selected',
+  );
+
+  if (!confirmed) {
     return;
   }
 
@@ -180,10 +188,15 @@ const renderLightbox = (): void => {
 
   const file = lightboxState.files[lightboxState.index];
   const src = `/jobs/${jobId}/files/${lightboxState.subfolder}/${file.filename}`;
+  const format = file.filename.split('.').pop()?.toUpperCase() ?? '';
+  const resolution = file.width && file.height ? `${file.width}×${file.height}` : null;
+  const metaParts = [format, resolution, formatBytes(file.size)].filter(Boolean);
 
   lightboxImage.src = src;
   lightboxImage.alt = file.filename;
   lightboxDownload.href = src;
+  lightboxFilename.textContent = file.filename;
+  lightboxMeta.textContent = metaParts.join(' · ');
 };
 
 const openLightbox = (subfolder: string, files: ImageMeta[], index: number): void => {
@@ -239,6 +252,10 @@ lightboxDelete.addEventListener('click', async () => {
 
   const { subfolder, files, index } = lightboxState;
   const file = files[index];
+
+  if (!(await confirmDialog(`Delete "${file.filename}"?`, 'Delete'))) {
+    return;
+  }
 
   await fetch(`/jobs/${jobId}/files/${subfolder}/${file.filename}`, { method: 'DELETE' });
   removeCard(subfolder, file.filename);
@@ -307,6 +324,10 @@ const renderGrid = (container: HTMLElement, subfolder: string, files: ImageMeta[
     const deleteButton = wrapper.querySelector('.delete-button') as HTMLButtonElement;
 
     deleteButton.addEventListener('click', async () => {
+      if (!(await confirmDialog(`Delete "${file.filename}"?`, 'Delete'))) {
+        return;
+      }
+
       await fetch(`/jobs/${jobId}/files/${subfolder}/${file.filename}`, { method: 'DELETE' });
       removeCard(subfolder, file.filename);
       renderToolbar();

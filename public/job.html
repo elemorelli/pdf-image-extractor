@@ -14,10 +14,14 @@
     </header>
     <h1 id="job-title"></h1>
     <div id="job-toolbar" class="job-toolbar"></div>
-    <h2>Transparent</h2>
-    <div id="transparent-grid" class="grid"></div>
-    <h2>Opaque</h2>
-    <div id="opaque-grid" class="grid"></div>
+    <details class="section" open>
+      <summary>Transparent</summary>
+      <div id="transparent-grid" class="grid"></div>
+    </details>
+    <details class="section" open>
+      <summary>Opaque</summary>
+      <div id="opaque-grid" class="grid"></div>
+    </details>
     <div id="lightbox" class="lightbox" hidden>
       <button id="lightbox-close" class="btn btn-icon lightbox-close" aria-label="Close">
         &times;
@@ -40,7 +44,17 @@
           <polyline points="15 6 9 12 15 18"></polyline>
         </svg>
       </button>
-      <img id="lightbox-image" alt="" />
+      <figure class="lightbox-figure">
+        <img id="lightbox-image" alt="" />
+        <figcaption class="lightbox-info">
+          <span id="lightbox-filename" class="lightbox-filename"></span>
+          <span id="lightbox-meta" class="lightbox-meta-line"></span>
+        </figcaption>
+        <div class="lightbox-actions">
+          <a id="lightbox-download" href="#" download class="btn btn-secondary">Download</a>
+          <button id="lightbox-delete" class="btn btn-danger">Delete</button>
+        </div>
+      </figure>
       <button id="lightbox-next" class="btn btn-icon lightbox-nav lightbox-next" aria-label="Next">
         <svg
           width="24"
@@ -55,10 +69,6 @@
           <polyline points="9 6 15 12 9 18"></polyline>
         </svg>
       </button>
-      <div class="lightbox-actions">
-        <a id="lightbox-download" href="#" download class="btn btn-secondary">Download</a>
-        <button id="lightbox-delete" class="btn btn-danger">Delete</button>
-      </div>
     </div>
     <script type="module" src="/dist/job.js"></script>
   </body>

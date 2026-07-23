@@ -1,3 +1,5 @@
+import { confirmDialog } from './lib/confirmDialog';
+
 interface JobSummary {
   jobId: string;
   originalName: string;
@@ -93,7 +95,7 @@ const render = (): void => {
 
   tbody.querySelectorAll('.delete-button').forEach((button) => {
     button.addEventListener('click', async () => {
-      if (!confirm('Delete this job?')) {
+      if (!(await confirmDialog('Delete this job and all of its images?', 'Delete job'))) {
         return;
       }
 
