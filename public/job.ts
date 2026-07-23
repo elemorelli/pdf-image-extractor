@@ -118,13 +118,14 @@ const deleteSelected = async (): Promise<void> => {
 
   const keys = [...selected];
 
-  await Promise.all(
-    keys.map((key) => {
-      const [subfolder, filename] = key.split('::');
+  // Sequential on purpose: the backend does a non-atomic read-decrement-write
+  // on the job's file count/size, so firing these in parallel races and
+  // corrupts those totals (each request reads the same stale count).
+  for (const key of keys) {
+    const [subfolder, filename] = key.split('::');
 
-      return fetch(`/jobs/${jobId}/files/${subfolder}/${filename}`, { method: 'DELETE' });
-    }),
-  );
+    await fetch(`/jobs/${jobId}/files/${subfolder}/${filename}`, { method: 'DELETE' });
+  }
 
   for (const key of keys) {
     const [subfolder, filename] = key.split('::');
