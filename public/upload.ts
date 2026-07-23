@@ -20,6 +20,18 @@ interface Config {
   maxUploadBytes: number;
 }
 
+const BASE_STAGES = ['structure', 'extract', 'convert', 'purge', 'composite', 'dedupe'];
+
+const STAGE_LABELS: Record<string, string> = {
+  structure: 'Reading structure',
+  extract: 'Extracting images',
+  convert: 'Converting',
+  purge: 'Cleaning up',
+  composite: 'Compositing',
+  dedupe: 'Removing duplicates',
+  webp: 'Converting to WebP',
+};
+
 const form = document.getElementById('upload-form') as HTMLFormElement;
 const dropzone = document.getElementById('dropzone') as HTMLDivElement;
 const dropzonePrompt = document.querySelector('.dropzone-prompt') as HTMLParagraphElement;
@@ -31,6 +43,8 @@ const dropzoneError = document.getElementById('dropzone-error') as HTMLParagraph
 const pdfInput = document.getElementById('pdf-input') as HTMLInputElement;
 const submitButton = document.getElementById('submit-button') as HTMLButtonElement;
 const progressBox = document.getElementById('progress') as HTMLDivElement;
+const stepper = document.getElementById('stepper') as HTMLOListElement;
+const progressBarFill = document.getElementById('progress-bar-fill') as HTMLDivElement;
 const progressText = document.getElementById('progress-text') as HTMLParagraphElement;
 const errorText = document.getElementById('error-text') as HTMLParagraphElement;
 const cancelButton = document.getElementById('cancel-button') as HTMLButtonElement;
@@ -38,6 +52,7 @@ const cancelButton = document.getElementById('cancel-button') as HTMLButtonEleme
 let currentJobId: string | null = null;
 let eventSource: EventSource | null = null;
 let maxUploadBytes: number | null = null;
+let stages: string[] = BASE_STAGES;
 
 const loadConfig = async (): Promise<void> => {
   const res = await fetch('/config');
@@ -140,6 +155,38 @@ dropzoneClear.addEventListener('click', (event) => {
   clearFile();
 });
 
+const renderStepper = (currentStage: string | null): void => {
+  stepper.innerHTML = '';
+
+  const currentIndex = currentStage ? stages.indexOf(currentStage) : -1;
+
+  for (const [index, stage] of stages.entries()) {
+    const li = document.createElement('li');
+
+    li.textContent = STAGE_LABELS[stage] ?? stage;
+
+    if (index < currentIndex) {
+      li.classList.add('stepper-done');
+    } else if (index === currentIndex) {
+      li.classList.add('stepper-active');
+    }
+
+    stepper.appendChild(li);
+  }
+};
+
+const renderProgressBar = (progress: StageProgress | null): void => {
+  if (!progress || progress.total <= 0) {
+    progressBarFill.classList.add('indeterminate');
+    progressBarFill.style.width = '';
+
+    return;
+  }
+
+  progressBarFill.classList.remove('indeterminate');
+  progressBarFill.style.width = `${Math.min(100, Math.round((progress.done / progress.total) * 100))}%`;
+};
+
 const closeStream = (): void => {
   if (eventSource) {
     eventSource.close();
@@ -168,11 +215,13 @@ const startStream = (jobId: string): void => {
       return;
     }
 
-    const itemLabel = status.progress ? `${status.progress.done}/${status.progress.total}` : null;
+    renderStepper(status.stage);
+    renderProgressBar(status.progress);
 
-    progressText.textContent = itemLabel
-      ? `${status.stage}: ${itemLabel}`
-      : status.stage || 'Working...';
+    const itemLabel = status.progress ? `${status.progress.done}/${status.progress.total}` : null;
+    const stageLabel = status.stage ? (STAGE_LABELS[status.stage] ?? status.stage) : 'Working...';
+
+    progressText.textContent = itemLabel ? `${stageLabel} (${itemLabel})` : stageLabel;
   };
 
   eventSource.onerror = () => {
@@ -187,8 +236,9 @@ form.addEventListener('submit', async (event) => {
 
   const formData = new FormData(form);
   const webpCheckbox = form.elements.namedItem('webp') as HTMLInputElement;
+  const webp = webpCheckbox.checked;
 
-  formData.set('webp', webpCheckbox.checked ? 'true' : 'false');
+  formData.set('webp', webp ? 'true' : 'false');
 
   const res = await fetch('/extract', { method: 'POST', body: formData });
 
@@ -202,6 +252,8 @@ form.addEventListener('submit', async (event) => {
   const { jobId } = (await res.json()) as ExtractResponse;
 
   currentJobId = jobId;
+  stages = webp ? [...BASE_STAGES, 'webp'] : BASE_STAGES;
+  renderStepper(null);
   form.hidden = true;
   progressBox.hidden = false;
   startStream(jobId);
