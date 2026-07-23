@@ -6,7 +6,13 @@
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
-    <nav><a href="/index.html">Upload</a><a href="/jobs.html">Past jobs</a></nav>
+    <header class="app-header">
+      <span class="app-name">PDF Image Extractor</span>
+      <nav>
+        <a href="/index.html" class="active" aria-current="page">Upload</a>
+        <a href="/jobs.html">Past jobs</a>
+      </nav>
+    </header>
     <h1>Upload a PDF</h1>
     <form id="upload-form">
       <input type="file" name="pdf" accept="application/pdf" required />

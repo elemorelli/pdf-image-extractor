@@ -2,7 +2,7 @@ services:
   pdf-image-extractor:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - data:/data
     restart: unless-stopped
