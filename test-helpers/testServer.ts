@@ -49,10 +49,17 @@ export const startTestServer = async () => {
   return { server, jobStore, baseUrl: `http://127.0.0.1:${port}` };
 };
 
+interface ImageMetaSummary {
+  filename: string;
+  size: number;
+  width?: number;
+  height?: number;
+}
+
 interface JobDetail {
   status: string;
-  transparent: string[];
-  opaque: string[];
+  transparent: ImageMetaSummary[];
+  opaque: ImageMetaSummary[];
 }
 
 // The job runner (real or fake) processes a job asynchronously in the

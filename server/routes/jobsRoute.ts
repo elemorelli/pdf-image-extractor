@@ -2,6 +2,7 @@ import path from 'node:path';
 import fsp from 'node:fs/promises';
 import { Router } from 'express';
 import { isValidJobId } from '../validate.ts';
+import { readImageMetaForFiles } from '../imageMeta.ts';
 import type { JobStore } from '../jobStore.ts';
 import type { JobRunner, AuditLogWriter } from '../jobRunner.ts';
 
@@ -39,9 +40,13 @@ export const createJobsRoute = ({ jobStore, jobRunner, auditLog }: JobsRouteDeps
     }
 
     const jobDir = jobStore.jobDir(jobId);
-    const [transparent, opaque] = await Promise.all([
+    const [transparentFiles, opaqueFiles] = await Promise.all([
       fsp.readdir(path.join(jobDir, 'transparent')).catch(() => []),
       fsp.readdir(path.join(jobDir, 'opaque')).catch(() => []),
+    ]);
+    const [transparent, opaque] = await Promise.all([
+      readImageMetaForFiles(path.join(jobDir, 'transparent'), transparentFiles),
+      readImageMetaForFiles(path.join(jobDir, 'opaque'), opaqueFiles),
     ]);
 
     res.json({ ...job, transparent, opaque });

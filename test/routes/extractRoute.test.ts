@@ -25,7 +25,7 @@ test('POST /extract creates a job and processes it via the injected runner', asy
     const detail = await waitForJobDone(baseUrl, jobId);
 
     assert.equal(detail.status, 'done');
-    assert.deepEqual(detail.transparent, ['a.png']);
+    assert.deepEqual(detail.transparent, [{ filename: 'a.png', size: 8 }]);
   } finally {
     server.close();
   }
