@@ -1,3 +1,5 @@
+import { formatBytes } from './lib/format';
+
 interface ExtractResponse {
   jobId: string;
 }
@@ -14,7 +16,20 @@ interface StatusEvent {
   error: string | null;
 }
 
+interface Config {
+  maxUploadBytes: number;
+}
+
 const form = document.getElementById('upload-form') as HTMLFormElement;
+const dropzone = document.getElementById('dropzone') as HTMLDivElement;
+const dropzonePrompt = document.querySelector('.dropzone-prompt') as HTMLParagraphElement;
+const dropzoneFile = document.querySelector('.dropzone-file') as HTMLDivElement;
+const dropzoneFilename = document.getElementById('dropzone-filename') as HTMLSpanElement;
+const dropzoneFilesize = document.getElementById('dropzone-filesize') as HTMLSpanElement;
+const dropzoneClear = document.getElementById('dropzone-clear') as HTMLButtonElement;
+const dropzoneError = document.getElementById('dropzone-error') as HTMLParagraphElement;
+const pdfInput = document.getElementById('pdf-input') as HTMLInputElement;
+const submitButton = document.getElementById('submit-button') as HTMLButtonElement;
 const progressBox = document.getElementById('progress') as HTMLDivElement;
 const progressText = document.getElementById('progress-text') as HTMLParagraphElement;
 const errorText = document.getElementById('error-text') as HTMLParagraphElement;
@@ -22,6 +37,108 @@ const cancelButton = document.getElementById('cancel-button') as HTMLButtonEleme
 
 let currentJobId: string | null = null;
 let eventSource: EventSource | null = null;
+let maxUploadBytes: number | null = null;
+
+const loadConfig = async (): Promise<void> => {
+  const res = await fetch('/config');
+  const config = (await res.json()) as Config;
+
+  maxUploadBytes = config.maxUploadBytes;
+};
+
+const setDropzoneError = (message: string | null): void => {
+  dropzoneError.textContent = message ?? '';
+  dropzoneError.hidden = !message;
+};
+
+const validateFile = (file: File): string | null => {
+  if (!file.name.toLowerCase().endsWith('.pdf')) {
+    return 'Only PDF files are supported.';
+  }
+
+  if (maxUploadBytes !== null && file.size > maxUploadBytes) {
+    return `File is too large (max ${formatBytes(maxUploadBytes)}).`;
+  }
+
+  return null;
+};
+
+const clearFile = (): void => {
+  pdfInput.value = '';
+  dropzonePrompt.hidden = false;
+  dropzoneFile.hidden = true;
+  submitButton.disabled = true;
+  setDropzoneError(null);
+};
+
+const applyFile = (file: File | undefined): void => {
+  if (!file) {
+    clearFile();
+
+    return;
+  }
+
+  const validationError = validateFile(file);
+
+  if (validationError) {
+    clearFile();
+    setDropzoneError(validationError);
+
+    return;
+  }
+
+  dropzonePrompt.hidden = true;
+  dropzoneFile.hidden = false;
+  dropzoneFilename.textContent = file.name;
+  dropzoneFilesize.textContent = formatBytes(file.size);
+  submitButton.disabled = false;
+  setDropzoneError(null);
+};
+
+dropzone.addEventListener('click', () => {
+  pdfInput.click();
+});
+
+dropzone.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    pdfInput.click();
+  }
+});
+
+dropzone.addEventListener('dragover', (event) => {
+  event.preventDefault();
+  dropzone.classList.add('dropzone--active');
+});
+
+dropzone.addEventListener('dragleave', () => {
+  dropzone.classList.remove('dropzone--active');
+});
+
+dropzone.addEventListener('drop', (event) => {
+  event.preventDefault();
+  dropzone.classList.remove('dropzone--active');
+
+  const file = event.dataTransfer?.files[0];
+
+  if (file) {
+    const transfer = new DataTransfer();
+
+    transfer.items.add(file);
+    pdfInput.files = transfer.files;
+  }
+
+  applyFile(file);
+});
+
+pdfInput.addEventListener('change', () => {
+  applyFile(pdfInput.files?.[0]);
+});
+
+dropzoneClear.addEventListener('click', (event) => {
+  event.stopPropagation();
+  clearFile();
+});
 
 const closeStream = (): void => {
   if (eventSource) {
@@ -66,6 +183,8 @@ const startStream = (jobId: string): void => {
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   errorText.textContent = '';
+  submitButton.disabled = true;
+
   const formData = new FormData(form);
   const webpCheckbox = form.elements.namedItem('webp') as HTMLInputElement;
 
@@ -75,6 +194,7 @@ form.addEventListener('submit', async (event) => {
 
   if (!res.ok) {
     errorText.textContent = 'Upload failed.';
+    submitButton.disabled = false;
 
     return;
   }
@@ -96,3 +216,5 @@ cancelButton.addEventListener('click', async () => {
   await fetch(`/jobs/${currentJobId}`, { method: 'DELETE' });
   location.reload();
 });
+
+loadConfig();

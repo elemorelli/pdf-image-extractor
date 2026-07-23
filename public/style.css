@@ -29,14 +29,14 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #211c17;
-    --color-surface: #2b241d;
-    --color-border: #3d332a;
+    --color-bg: #0d0d0d;
+    --color-surface: #171717;
+    --color-border: #2b2b2b;
     --color-text: #f2e9de;
-    --color-text-muted: #b3a495;
+    --color-text-muted: #a8a29a;
     --color-accent: #f0a94e;
     --color-accent-hover: #f6bc72;
-    --color-accent-contrast: #211c17;
+    --color-accent-contrast: #0d0d0d;
     --color-danger: #f87171;
     --color-danger-hover: #fca5a5;
     --color-danger-bg: #450a0a;
@@ -232,4 +232,63 @@ td {
   color: var(--color-danger);
   font-weight: 600;
   margin-top: var(--space-3);
+}
+
+/* ==== Dropzone & form controls ==== */
+.dropzone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  text-align: center;
+  cursor: pointer;
+  background: var(--color-surface);
+  margin-bottom: var(--space-3);
+}
+
+.dropzone--active {
+  border-color: var(--color-accent);
+  background: var(--color-running-bg);
+}
+
+.dropzone-prompt {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.dropzone-file {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.field-error {
+  color: var(--color-danger);
+  font-size: 0.9rem;
+  margin: 0 0 var(--space-3);
+}
+
+.field-hint {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin: var(--space-1) 0 var(--space-4);
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  margin-bottom: var(--space-1);
+}
+
+.toggle input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--color-accent);
 }

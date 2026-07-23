@@ -15,13 +15,30 @@
     </header>
     <h1>Upload a PDF</h1>
     <form id="upload-form">
-      <input type="file" name="pdf" accept="application/pdf" required />
-      <label><input type="checkbox" name="webp" /> Convert to WebP</label>
-      <button type="submit">Extract images</button>
+      <div id="dropzone" class="dropzone" tabindex="0">
+        <p class="dropzone-prompt">Drag &amp; drop a PDF here, or click to browse.</p>
+        <div class="dropzone-file" hidden>
+          <span id="dropzone-filename"></span>
+          <span id="dropzone-filesize" class="text-muted"></span>
+          <button type="button" id="dropzone-clear" class="btn btn-icon" aria-label="Remove file">
+            &times;
+          </button>
+        </div>
+        <input type="file" id="pdf-input" name="pdf" accept="application/pdf" hidden />
+      </div>
+      <p id="dropzone-error" class="field-error" hidden></p>
+      <label class="toggle">
+        <input type="checkbox" name="webp" />
+        <span>Convert to WebP</span>
+      </label>
+      <p class="field-hint">Recompresses extracted images as WebP to save space.</p>
+      <button type="submit" id="submit-button" class="btn btn-primary" disabled>
+        Extract images
+      </button>
     </form>
-    <div id="progress" hidden>
+    <div id="progress" class="card" hidden>
       <p id="progress-text"></p>
-      <button id="cancel-button">Cancel</button>
+      <button id="cancel-button" class="btn btn-danger">Cancel</button>
     </div>
     <p id="error-text"></p>
     <script type="module" src="/dist/upload.js"></script>
