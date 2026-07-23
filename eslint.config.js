@@ -1,0 +1,25 @@
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import eslintConfigPrettier from 'eslint-config-prettier';
+import globals from 'globals';
+
+export default tseslint.config(
+  {
+    ignores: ['node_modules/**', 'public/dist/**', 'docs/**'],
+  },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    files: ['server/**/*.ts', 'test/**/*.ts', 'scripts/**/*.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  {
+    files: ['public/**/*.ts'],
+    languageOptions: {
+      globals: globals.browser,
+    },
+  },
+  eslintConfigPrettier,
+);

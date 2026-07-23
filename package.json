@@ -1,0 +1,27 @@
+{
+  "name": "pdf-image-extractor-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "server/index.ts",
+  "scripts": {
+    "start": "node server/index.ts",
+    "build:frontend": "node scripts/build-frontend.js",
+    "test": "node --test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.frontend.json"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.1.1",
+    "esbuild": "0.28.1",
+    "eslint": "10.7.0",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "17.7.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.65.0"
+  }
+}
