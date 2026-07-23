@@ -7,11 +7,26 @@
 
 set -uo pipefail
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+WEBP_CONVERT="$SCRIPT_DIR/webp_convert.sh"
+
 MIN_DIMENSION_PX=100
-pdf="${1:-}"
+WEBP=0
+pdf=""
+
+for arg in "$@"; do
+	case "$arg" in
+	--webp)
+		WEBP=1
+		;;
+	*)
+		pdf="$arg"
+		;;
+	esac
+done
 
 if [[ -z "$pdf" ]]; then
-	echo "Usage: $0 <file.pdf>" >&2
+	echo "Usage: $0 [--webp] <file.pdf>" >&2
 	exit 1
 fi
 
@@ -185,5 +200,15 @@ done < <(pdfimages -print-filenames "$pdf" "$folder/$folder")
 
 	echo "* Summary: $paired_count pair(s) -> transparent/, $single_count image(s) -> opaque/, $orphan_mask_count orphaned mask(s) discarded, $reused_count reused image(s) skipped, $dupe_count duplicate(s) removed"
 )
+
+if ((WEBP == 1)); then
+	if [[ -x "$WEBP_CONVERT" ]]; then
+		echo "* Converting to webp"
+		"$WEBP_CONVERT" --apply "$folder/transparent"
+		"$WEBP_CONVERT" --apply "$folder/opaque"
+	else
+		echo "* Skipping webp conversion: $WEBP_CONVERT not found or not executable" >&2
+	fi
+fi
 
 echo "****** $pdf DONE ******"
