@@ -244,10 +244,30 @@ td:last-child {
 }
 
 /* ==== Thumbnail cards ==== */
-.job-actions {
+.job-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.toolbar-actions {
   display: flex;
   gap: var(--space-3);
-  margin-bottom: var(--space-5);
+}
+
+.toolbar-count {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
 }
 
 .thumb-card {
@@ -257,6 +277,14 @@ td:last-child {
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.thumb-card:has(.thumb-select:checked) {
+  background: var(--color-running-bg);
+  border-color: var(--color-accent);
 }
 
 .thumb-card img {
@@ -269,6 +297,7 @@ td:last-child {
 .thumb-meta {
   padding: var(--space-2) var(--space-3);
   font-size: 0.8rem;
+  text-align: center;
   color: var(--color-text-muted);
 }
 
@@ -302,6 +331,10 @@ td:last-child {
 /* ==== Lightbox ==== */
 .thumb-card img {
   cursor: zoom-in;
+}
+
+body.selecting .thumb-card img {
+  cursor: pointer;
 }
 
 .lightbox {
@@ -615,4 +648,23 @@ td:last-child {
 
 #jobs-table tbody tr:hover {
   background: var(--color-bg);
+}
+
+/* ==== Bulk selection ==== */
+.thumb-select {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--color-accent);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  z-index: 1;
+}
+
+.thumb-card:hover .thumb-select,
+.thumb-select:checked {
+  opacity: 1;
 }
