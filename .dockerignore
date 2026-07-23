@@ -1,0 +1,7 @@
+node_modules
+.git
+docs
+test
+test-helpers
+public/dist
+*.pdf
