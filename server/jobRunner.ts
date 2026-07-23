@@ -15,15 +15,20 @@ export interface StartParams {
   originalName: string;
 }
 
+export interface StageProgress {
+  done: number;
+  total: number;
+}
+
 export interface LiveProgress {
   stage: string | null;
-  item: string | null;
+  progress: StageProgress | null;
 }
 
 export interface ProgressEvent {
   jobId: string;
   stage: string | null;
-  item: string | null;
+  progress: StageProgress | null;
 }
 
 export interface DoneEvent {
@@ -40,7 +45,7 @@ export interface JobRunner {
 
 interface LiveEntry {
   stage: string | null;
-  item: string | null;
+  progress: StageProgress | null;
   child: ChildProcess;
   cancelled: boolean;
 }
@@ -77,7 +82,7 @@ export const createJobRunner = (
 
     const child = spawn(scriptPath, args, { stdio: ['ignore', 'pipe', 'pipe'] });
 
-    live.set(jobId, { stage: null, item: null, child, cancelled: false });
+    live.set(jobId, { stage: null, progress: null, child, cancelled: false });
 
     let stdoutBuffer = '';
 
@@ -100,11 +105,11 @@ export const createJobRunner = (
         }
 
         entry.stage = progress.stage;
-        entry.item =
+        entry.progress =
           progress.done !== undefined && progress.total !== undefined
-            ? `${progress.done}/${progress.total}`
+            ? { done: progress.done, total: progress.total }
             : null;
-        events.emit('progress', { jobId, stage: entry.stage, item: entry.item });
+        events.emit('progress', { jobId, stage: entry.stage, progress: entry.progress });
       }
     });
 
@@ -160,7 +165,7 @@ export const createJobRunner = (
       return null;
     }
 
-    return { stage: entry.stage, item: entry.item };
+    return { stage: entry.stage, progress: entry.progress };
   };
 
   const cancel = (jobId: string): boolean => {

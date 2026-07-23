@@ -25,7 +25,7 @@ export const createStatusRoute = ({ jobStore, jobRunner }: StatusRouteDeps): Rou
     const live = jobRunner.getLiveProgress(jobId);
 
     if (live) {
-      res.json({ stage: live.stage, item: live.item, done: false, error: null });
+      res.json({ stage: live.stage, progress: live.progress, done: false, error: null });
 
       return;
     }
@@ -40,7 +40,7 @@ export const createStatusRoute = ({ jobStore, jobRunner }: StatusRouteDeps): Rou
 
     res.json({
       stage: null,
-      item: null,
+      progress: null,
       done: job.status === 'done' || job.status === 'error',
       error: job.status === 'error' ? job.error : null,
     });
@@ -90,7 +90,7 @@ export const createStatusRoute = ({ jobStore, jobRunner }: StatusRouteDeps): Rou
         return;
       }
 
-      sendEvent({ stage: payload.stage, item: payload.item, done: false, error: null });
+      sendEvent({ stage: payload.stage, progress: payload.progress, done: false, error: null });
     };
 
     const onDone = (payload: DoneEvent): void => {
@@ -98,7 +98,7 @@ export const createStatusRoute = ({ jobStore, jobRunner }: StatusRouteDeps): Rou
         return;
       }
 
-      sendEvent({ stage: null, item: null, done: true, error: payload.error });
+      sendEvent({ stage: null, progress: null, done: true, error: payload.error });
       cleanup();
       res.end();
     };
@@ -114,7 +114,7 @@ export const createStatusRoute = ({ jobStore, jobRunner }: StatusRouteDeps): Rou
     }
 
     if (live) {
-      sendEvent({ stage: live.stage, item: live.item, done: false, error: null });
+      sendEvent({ stage: live.stage, progress: live.progress, done: false, error: null });
     }
   });
 

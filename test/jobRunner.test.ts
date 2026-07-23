@@ -158,7 +158,7 @@ test('start() emits progress and done events over jobRunner.events', async () =>
 
   await waitForJobToFinish(jobStore, jobId);
 
-  assert.deepEqual(progressEvents, [{ jobId, stage: 'extract', item: '1/2' }]);
+  assert.deepEqual(progressEvents, [{ jobId, stage: 'extract', progress: { done: 1, total: 2 } }]);
   assert.deepEqual(doneEvents, [{ jobId, error: null }]);
 });
 

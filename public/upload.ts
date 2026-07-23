@@ -2,9 +2,14 @@ interface ExtractResponse {
   jobId: string;
 }
 
+interface StageProgress {
+  done: number;
+  total: number;
+}
+
 interface StatusEvent {
   stage: string | null;
-  item: string | null;
+  progress: StageProgress | null;
   done: boolean;
   error: string | null;
 }
@@ -46,8 +51,10 @@ const startStream = (jobId: string): void => {
       return;
     }
 
-    progressText.textContent = status.item
-      ? `${status.stage}: ${status.item}`
+    const itemLabel = status.progress ? `${status.progress.done}/${status.progress.total}` : null;
+
+    progressText.textContent = itemLabel
+      ? `${status.stage}: ${itemLabel}`
       : status.stage || 'Working...';
   };
 
