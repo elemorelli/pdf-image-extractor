@@ -12,14 +12,25 @@
         <a href="/jobs.html" class="active" aria-current="page">Past jobs</a>
       </nav>
     </header>
-    <h1>Past jobs</h1>
+    <div class="page-header">
+      <h1>Past jobs</h1>
+      <div class="jobs-toolbar">
+        <label for="status-filter">Filter</label>
+        <select id="status-filter">
+          <option value="all">All</option>
+          <option value="done">Done</option>
+          <option value="error">Error</option>
+          <option value="processing">Running</option>
+        </select>
+      </div>
+    </div>
     <table id="jobs-table">
       <thead>
         <tr>
-          <th>File</th>
-          <th>Processed</th>
-          <th>Status</th>
-          <th>Images</th>
+          <th data-sort="originalName">File</th>
+          <th data-sort="uploadedAt">Processed</th>
+          <th data-sort="status">Status</th>
+          <th data-sort="images">Images</th>
           <th></th>
         </tr>
       </thead>
