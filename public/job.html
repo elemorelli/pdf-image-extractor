@@ -21,6 +21,48 @@
     <div id="transparent-grid" class="grid"></div>
     <h2>Opaque</h2>
     <div id="opaque-grid" class="grid"></div>
+    <div id="lightbox" class="lightbox" hidden>
+      <button id="lightbox-close" class="btn btn-icon lightbox-close" aria-label="Close">
+        &times;
+      </button>
+      <button
+        id="lightbox-prev"
+        class="btn btn-icon lightbox-nav lightbox-prev"
+        aria-label="Previous"
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="15 6 9 12 15 18"></polyline>
+        </svg>
+      </button>
+      <img id="lightbox-image" alt="" />
+      <button id="lightbox-next" class="btn btn-icon lightbox-nav lightbox-next" aria-label="Next">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="9 6 15 12 9 18"></polyline>
+        </svg>
+      </button>
+      <div class="lightbox-actions">
+        <a id="lightbox-download" href="#" download class="btn btn-secondary">Download</a>
+        <button id="lightbox-delete" class="btn btn-danger">Delete</button>
+      </div>
+    </div>
     <script type="module" src="/dist/job.js"></script>
   </body>
 </html>
