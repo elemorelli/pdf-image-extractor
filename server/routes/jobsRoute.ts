@@ -23,35 +23,49 @@ export const createJobsRoute = ({ jobStore, jobRunner, auditLog }: JobsRouteDeps
 
   router.get('/:jobId', async (req, res) => {
     const { jobId } = req.params;
+
     if (!isValidJobId(jobId)) {
       res.status(404).end();
+
       return;
     }
+
     const job = await jobStore.getJob(jobId);
+
     if (!job) {
       res.status(404).end();
+
       return;
     }
+
     const jobDir = jobStore.jobDir(jobId);
     const [transparent, opaque] = await Promise.all([
       fsp.readdir(path.join(jobDir, 'transparent')).catch(() => []),
       fsp.readdir(path.join(jobDir, 'opaque')).catch(() => []),
     ]);
+
     res.json({ ...job, transparent, opaque });
   });
 
   router.delete('/:jobId', async (req, res) => {
     const { jobId } = req.params;
+
     if (!isValidJobId(jobId)) {
       res.status(404).end();
+
       return;
     }
+
     const job = await jobStore.getJob(jobId);
+
     if (!job) {
       res.status(404).end();
+
       return;
     }
+
     const wasRunning = jobRunner.cancel(jobId);
+
     await jobStore.deleteJob(jobId);
     await auditLog.log({
       type: wasRunning ? 'cancelled' : 'deleted',

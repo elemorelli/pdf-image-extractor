@@ -17,6 +17,7 @@ export const makeFakeAuditLog = () => ({
 export const makeFakeJobRunner = (jobStore: JobStore): JobRunner => ({
   start: async (jobId: string, _params: StartParams) => {
     const jobDir = jobStore.jobDir(jobId);
+
     await fsp.mkdir(path.join(jobDir, 'transparent'), { recursive: true });
     await fsp.mkdir(path.join(jobDir, 'opaque'), { recursive: true });
     await fsp.writeFile(path.join(jobDir, 'transparent', 'a.png'), 'fake-png');
@@ -33,8 +34,10 @@ export const startTestServer = async () => {
   const auditLog = makeFakeAuditLog();
   const app = createApp({ jobStore, jobRunner, auditLog });
   const server = app.listen(0);
+
   await new Promise<void>((resolve) => server.once('listening', resolve));
   const port = (server.address() as AddressInfo).port;
+
   return { server, jobStore, baseUrl: `http://127.0.0.1:${port}` };
 };
 
@@ -51,7 +54,11 @@ export const waitForJobDone = async (baseUrl: string, jobId: string): Promise<Jo
   for (;;) {
     const res = await fetch(`${baseUrl}/jobs/${jobId}`);
     const detail = (await res.json()) as JobDetail;
-    if (detail.status !== 'processing') return detail;
+
+    if (detail.status !== 'processing') {
+      return detail;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
 };

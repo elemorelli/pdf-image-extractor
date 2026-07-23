@@ -8,12 +8,15 @@ import { createJobRunner } from '../server/jobRunner.ts';
 
 const writeFakeScript = (body: string): string => {
   const scriptPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'fake-script-')), 'run.sh');
+
   fs.writeFileSync(scriptPath, `#!/usr/bin/env bash\n${body}\n`, { mode: 0o755 });
+
   return scriptPath;
 };
 
 const makeFakeAuditLog = () => {
   const events: Record<string, unknown>[] = [];
+
   return {
     events,
     log: async (event: Record<string, unknown>): Promise<void> => {
@@ -25,14 +28,20 @@ const makeFakeAuditLog = () => {
 const makeTempPdfPath = (): string => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jobrunner-pdf-'));
   const pdfPath = path.join(dir, 'input.pdf');
+
   fs.writeFileSync(pdfPath, 'fake pdf bytes');
+
   return pdfPath;
 };
 
 const waitForJobToFinish = async (jobStore: JobStore, jobId: string): Promise<Job> => {
   for (;;) {
     const job = await jobStore.getJob(jobId);
-    if (job && job.status !== 'processing') return job;
+
+    if (job && job.status !== 'processing') {
+      return job;
+    }
+
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
 };
@@ -53,6 +62,7 @@ test('start() streams progress, marks job done, and deletes the input pdf', asyn
   runner.start(jobId, { pdfPath, webp: false, originalName: 'x.pdf' });
 
   const job = await waitForJobToFinish(jobStore, jobId);
+
   assert.equal(job.status, 'done');
   assert.equal(auditLog.events.at(-1)?.type, 'done');
   assert.equal(runner.getLiveProgress(jobId), null);
@@ -70,6 +80,7 @@ test('start() marks job error with the last stderr line on failure', async () =>
   runner.start(jobId, { pdfPath, webp: false, originalName: 'x.pdf' });
 
   const job = await waitForJobToFinish(jobStore, jobId);
+
   assert.equal(job.status, 'error');
   assert.equal(job.error, 'boom');
 });
@@ -93,5 +104,6 @@ test('cancel() returns false for a job that is not running', () => {
   const jobStore = createJobStore(fs.mkdtempSync(path.join(os.tmpdir(), 'jobrunner-store-')));
   const auditLog = makeFakeAuditLog();
   const runner = createJobRunner(jobStore, auditLog, '/bin/true');
+
   assert.equal(runner.cancel('nonexistent'), false);
 });

@@ -23,6 +23,7 @@ test('pdf_extract.sh --outdir writes output directly into the given directory an
     .map(parseProgressLine)
     .filter((p): p is ProgressUpdate => p !== null);
   const stages = new Set(progressLines.map((p) => p.stage));
+
   for (const expected of [
     'structure',
     'extract',
@@ -41,6 +42,7 @@ test('pdf_extract.sh --outdir writes output directly into the given directory an
   const transparentFiles = fs.readdirSync(path.join(outdir, 'transparent'));
   const opaqueFiles = fs.readdirSync(path.join(outdir, 'opaque'));
   const allFiles = [...transparentFiles, ...opaqueFiles];
+
   assert.ok(allFiles.length > 0, 'expected at least one extracted image');
   assert.ok(
     allFiles.every((f) => f.endsWith('.webp')),
@@ -52,6 +54,7 @@ test('pdf_extract.sh --outdir writes output directly into the given directory an
 
 test('pdf_extract.sh without --outdir keeps the basename-derived folder behavior', () => {
   const workdir = fs.mkdtempSync(path.join(os.tmpdir(), 'pdf-extract-cwd-'));
+
   execFileSync(path.join(REPO_ROOT, 'pdf_extract.sh'), [SAMPLE_PDF], {
     encoding: 'utf8',
     cwd: workdir,

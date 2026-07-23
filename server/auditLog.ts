@@ -14,6 +14,7 @@ export const createAuditLog = (dir: string): AuditLog => {
 
   const log = (event: Record<string, unknown>): Promise<void> => {
     const line = JSON.stringify({ time: new Date().toISOString(), ...event });
+
     return new Promise((resolve, reject) => {
       stream.write(line + '\n', (err) => (err ? reject(err) : resolve()));
     });

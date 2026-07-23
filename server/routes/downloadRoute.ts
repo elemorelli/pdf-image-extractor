@@ -14,20 +14,27 @@ export const createDownloadRoute = ({ jobStore }: DownloadRouteDeps): Router => 
 
   router.get('/:jobId/download', async (req, res) => {
     const { jobId } = req.params;
+
     if (!isValidJobId(jobId)) {
       res.status(404).end();
+
       return;
     }
+
     const job = await jobStore.getJob(jobId);
+
     if (!job) {
       res.status(404).end();
+
       return;
     }
 
     res.attachment(`${job.originalName.replace(/\.pdf$/i, '')}.zip`);
     const archive = new ZipArchive();
+
     archive.pipe(res);
     const jobDir = jobStore.jobDir(jobId);
+
     archive.directory(path.join(jobDir, 'transparent'), 'transparent');
     archive.directory(path.join(jobDir, 'opaque'), 'opaque');
     await archive.finalize();

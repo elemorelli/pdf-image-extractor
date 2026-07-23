@@ -13,9 +13,11 @@ test('deletes jobs older than maxAgeMs and keeps newer ones', async () => {
   const now = Date.parse('2026-07-23T12:00:00.000Z');
 
   const oldJob = await store.createJob({ originalName: 'old.pdf', webp: false });
+
   await store.updateJob(oldJob, { uploadedAt: '2026-07-22T00:00:00.000Z' }); // 36h old
 
   const newJob = await store.createJob({ originalName: 'new.pdf', webp: false });
+
   await store.updateJob(newJob, { uploadedAt: '2026-07-23T10:00:00.000Z' }); // 2h old
 
   const deleted = await sweepExpiredJobs(store, { maxAgeMs: 24 * 60 * 60 * 1000, now });
@@ -29,8 +31,10 @@ test('deletes nothing when no jobs are older than maxAgeMs', async () => {
   const store = createJobStore(tempBaseDir());
   const now = Date.parse('2026-07-23T12:00:00.000Z');
   const jobId = await store.createJob({ originalName: 'fresh.pdf', webp: false });
+
   await store.updateJob(jobId, { uploadedAt: '2026-07-23T11:00:00.000Z' });
 
   const deleted = await sweepExpiredJobs(store, { maxAgeMs: 24 * 60 * 60 * 1000, now });
+
   assert.deepEqual(deleted, []);
 });

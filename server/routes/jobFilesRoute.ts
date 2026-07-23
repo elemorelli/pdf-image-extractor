@@ -15,29 +15,42 @@ export const createJobFilesRoute = ({ jobStore }: JobFilesRouteDeps): Router => 
 
   router.get('/:jobId/files/:subfolder/:filename', (req, res) => {
     const { jobId, subfolder, filename } = req.params;
+
     if (!isValidJobId(jobId) || !isValidSubfolder(subfolder) || !isValidFilename(filename)) {
       res.status(404).end();
+
       return;
     }
+
     const filePath = path.join(jobStore.jobDir(jobId), subfolder, filename);
+
     res.sendFile(filePath, (err) => {
-      if (err && !res.headersSent) res.status(404).end();
+      if (err && !res.headersSent) {
+        res.status(404).end();
+      }
     });
   });
 
   router.delete('/:jobId/files/:subfolder/:filename', async (req, res) => {
     const { jobId, subfolder, filename } = req.params;
+
     if (!isValidJobId(jobId) || !isValidSubfolder(subfolder) || !isValidFilename(filename)) {
       res.status(404).end();
+
       return;
     }
+
     const job = await jobStore.getJob(jobId);
+
     if (!job) {
       res.status(404).end();
+
       return;
     }
+
     if (job.status !== 'done') {
       res.status(409).json({ error: 'Job is not done yet' });
+
       return;
     }
 
@@ -45,6 +58,7 @@ export const createJobFilesRoute = ({ jobStore }: JobFilesRouteDeps): Router => 
 
     const countKey = subfolder === 'transparent' ? 'transparentCount' : 'opaqueCount';
     const currentCount = job[countKey] || 0;
+
     await jobStore.updateJob(jobId, { [countKey]: Math.max(0, currentCount - 1) });
 
     res.status(204).end();

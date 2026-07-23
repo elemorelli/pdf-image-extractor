@@ -7,9 +7,12 @@ export interface ProgressUpdate {
 }
 
 export const parseProgressLine = (line: unknown): ProgressUpdate | null => {
-  if (typeof line !== 'string' || !line.startsWith(PREFIX)) return null;
+  if (typeof line !== 'string' || !line.startsWith(PREFIX)) {
+    return null;
+  }
 
   let payload: unknown;
+
   try {
     payload = JSON.parse(line.slice(PREFIX.length));
   } catch {
@@ -26,7 +29,14 @@ export const parseProgressLine = (line: unknown): ProgressUpdate | null => {
 
   const p = payload as { stage: string; done?: unknown; total?: unknown };
   const result: ProgressUpdate = { stage: p.stage };
-  if (typeof p.done === 'number') result.done = p.done;
-  if (typeof p.total === 'number') result.total = p.total;
+
+  if (typeof p.done === 'number') {
+    result.done = p.done;
+  }
+
+  if (typeof p.total === 'number') {
+    result.total = p.total;
+  }
+
   return result;
 };

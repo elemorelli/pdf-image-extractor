@@ -22,15 +22,20 @@ const poll = (delay: number): void => {
   pollTimer = setTimeout(async () => {
     const res = await fetch(`/status/${currentJobId}`);
     const status = (await res.json()) as StatusResponse;
+
     if (status.error) {
       errorText.textContent = `Failed: ${status.error}`;
       progressBox.hidden = true;
+
       return;
     }
+
     if (status.done) {
       location.href = `/job.html?id=${currentJobId}`;
+
       return;
     }
+
     progressText.textContent = status.item
       ? `${status.stage}: ${status.item}`
       : status.stage || 'Working...';
@@ -43,14 +48,19 @@ form.addEventListener('submit', async (event) => {
   errorText.textContent = '';
   const formData = new FormData(form);
   const webpCheckbox = form.elements.namedItem('webp') as HTMLInputElement;
+
   formData.set('webp', webpCheckbox.checked ? 'true' : 'false');
 
   const res = await fetch('/extract', { method: 'POST', body: formData });
+
   if (!res.ok) {
     errorText.textContent = 'Upload failed.';
+
     return;
   }
+
   const { jobId } = (await res.json()) as ExtractResponse;
+
   currentJobId = jobId;
   form.hidden = true;
   progressBox.hidden = false;
@@ -58,8 +68,14 @@ form.addEventListener('submit', async (event) => {
 });
 
 cancelButton.addEventListener('click', async () => {
-  if (!currentJobId) return;
-  if (pollTimer !== null) clearTimeout(pollTimer);
+  if (!currentJobId) {
+    return;
+  }
+
+  if (pollTimer !== null) {
+    clearTimeout(pollTimer);
+  }
+
   await fetch(`/jobs/${currentJobId}`, { method: 'DELETE' });
   location.reload();
 });

@@ -37,6 +37,7 @@ export const createJobStore = (baseDir: string): JobStore => {
 
   const createJob = async ({ originalName, webp }: NewJobParams): Promise<string> => {
     const jobId = crypto.randomUUID();
+
     await fs.mkdir(jobDir(jobId), { recursive: true });
     const metadata: Omit<Job, 'jobId'> = {
       originalName,
@@ -44,44 +45,68 @@ export const createJobStore = (baseDir: string): JobStore => {
       status: 'processing',
       webp: Boolean(webp),
     };
+
     await fs.writeFile(metadataPath(jobId), JSON.stringify(metadata, null, 2));
+
     return jobId;
   };
 
   const getJob = async (jobId: string): Promise<Job | null> => {
     try {
       const raw = await fs.readFile(metadataPath(jobId), 'utf8');
+
       return { jobId, ...JSON.parse(raw) };
     } catch (err) {
-      if (isEnoent(err)) return null;
+      if (isEnoent(err)) {
+        return null;
+      }
+
       throw err;
     }
   };
 
   const listJobs = async (): Promise<Job[]> => {
     let entries;
+
     try {
       entries = await fs.readdir(baseDir, { withFileTypes: true });
     } catch (err) {
-      if (isEnoent(err)) return [];
+      if (isEnoent(err)) {
+        return [];
+      }
+
       throw err;
     }
     const jobs: Job[] = [];
+
     for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
+      if (!entry.isDirectory()) {
+        continue;
+      }
+
       const job = await getJob(entry.name);
-      if (job) jobs.push(job);
+
+      if (job) {
+        jobs.push(job);
+      }
     }
     jobs.sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
+
     return jobs;
   };
 
   const updateJob = async (jobId: string, patch: Partial<Omit<Job, 'jobId'>>): Promise<Job> => {
     const current = await getJob(jobId);
-    if (!current) throw new Error(`No such job: ${jobId}`);
+
+    if (!current) {
+      throw new Error(`No such job: ${jobId}`);
+    }
+
     const { jobId: _omit, ...rest } = current;
     const updated = { ...rest, ...patch };
+
     await fs.writeFile(metadataPath(jobId), JSON.stringify(updated, null, 2));
+
     return { jobId, ...updated };
   };
 
