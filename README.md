@@ -27,6 +27,24 @@ All are optional; defaults work out of the box.
 
 Set them under `environment:` in `docker-compose.yml`, or with `docker run -e`.
 
+### Deploying from the published image (e.g. a home server)
+
+Every push to `main` builds and publishes an image to GHCR via `.github/workflows/docker-publish.yml`, tagged `latest` and with the commit SHA. `docker-compose.yml` already points at `ghcr.io/elemorelli/pdf-image-extractor:latest`, so a server only needs that one file, not the full repo.
+
+One-time setup on the server:
+
+1. Copy `docker-compose.yml` there (`scp` it, or `curl` it from the repo).
+2. The first push creates the GHCR package as private. Make it public in the package's GitHub settings, or `docker login ghcr.io` on the server with a token that has `read:packages`.
+
+To update after a new push lands:
+
+```
+docker compose pull
+docker compose up -d
+```
+
+No rebuild, no source checkout. Roll back by pointing `image:` at a `:<commit-sha>` tag instead of `:latest`.
+
 ### Running without Docker
 
 Requires the same tools as the CLI script (see [Requirements](#requirements)) plus Node.js 24+.

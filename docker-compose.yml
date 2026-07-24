@@ -1,6 +1,7 @@
 services:
   pdf-image-extractor:
     build: .
+    image: ghcr.io/elemorelli/pdf-image-extractor:latest
     ports:
       - '3000:3000'
     volumes:
