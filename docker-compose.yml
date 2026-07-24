@@ -3,7 +3,7 @@ services:
     build: .
     image: ghcr.io/elemorelli/pdf-image-extractor:latest
     ports:
-      - '3000:3000'
+      - '54217:3000'
     volumes:
       - data:/data
     restart: unless-stopped

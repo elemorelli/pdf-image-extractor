@@ -12,7 +12,7 @@ Available as a standalone `pdf_extract.sh` script, or as a small web app (with a
 docker compose up -d --build
 ```
 
-Then open `http://localhost:3000`. Uploaded PDFs and extracted images are kept in a named Docker volume (`data`), so they survive container restarts. Finished jobs are swept automatically after `RETENTION_HOURS` (see below).
+Then open `http://localhost:54217`. Uploaded PDFs and extracted images are kept in a named Docker volume (`data`), so they survive container restarts. Finished jobs are swept automatically after `RETENTION_HOURS` (see below). Change the host-side port in `docker-compose.yml`'s `ports:` mapping if `54217` isn't free.
 
 ### Environment variables
 
