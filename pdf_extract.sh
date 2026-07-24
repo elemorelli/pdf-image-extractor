@@ -13,20 +13,40 @@ WEBP_CONVERT="$SCRIPT_DIR/webp_convert.sh"
 MIN_DIMENSION_PX=100
 WEBP=0
 pdf=""
+outdir=""
 
-for arg in "$@"; do
-	case "$arg" in
+emit_progress() {
+	local stage="$1" done="${2:-}" total="${3:-}"
+	if [[ -n "$done" && -n "$total" ]]; then
+		printf '##PROGRESS##{"stage":"%s","done":%s,"total":%s}\n' "$stage" "$done" "$total"
+	else
+		printf '##PROGRESS##{"stage":"%s"}\n' "$stage"
+	fi
+}
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
 	--webp)
 		WEBP=1
+		shift
+		;;
+	--outdir)
+		outdir="$2"
+		shift 2
+		;;
+	--outdir=*)
+		outdir="${1#--outdir=}"
+		shift
 		;;
 	*)
-		pdf="$arg"
+		pdf="$1"
+		shift
 		;;
 	esac
 done
 
 if [[ -z "$pdf" ]]; then
-	echo "Usage: $0 [--webp] <file.pdf>" >&2
+	echo "Usage: $0 [--webp] [--outdir DIR] <file.pdf>" >&2
 	exit 1
 fi
 
@@ -39,8 +59,14 @@ shopt -s nullglob
 
 echo "****** PROCESSING $pdf ******"
 
-folder="$(basename "$pdf")"
-folder="${folder%.pdf}"
+if [[ -n "$outdir" ]]; then
+	folder="$outdir"
+	prefix="page"
+else
+	folder="$(basename "$pdf")"
+	folder="${folder%.pdf}"
+	prefix="$folder"
+fi
 mkdir -p "$folder"
 
 # pdfimages -list reports each image's real PDF role (image vs smask) and
@@ -50,6 +76,7 @@ mkdir -p "$folder"
 # example), which lets us dedupe by PDF structure below instead of by
 # comparing pixels after the fact.
 echo "* Reading image/mask structure"
+emit_progress "structure"
 declare -A kind=()
 declare -A objid=()
 while read -r num type obj; do
@@ -59,11 +86,13 @@ done < <(pdfimages -list "$pdf" | tail -n +3 | awk '{print $2, $3, $11}')
 
 total_images=${#kind[@]}
 echo "* Extracting images (0/$total_images)"
+emit_progress "extract" 0 "$total_images"
 i=0
 while IFS= read -r f; do
 	i=$((i + 1))
 	printf '\r  %d/%d %s' "$i" "$total_images" "$(basename "$f")"
-done < <(pdfimages -print-filenames "$pdf" "$folder/$folder")
+	emit_progress "extract" "$i" "$total_images"
+done < <(stdbuf -oL pdfimages -print-filenames "$pdf" "$folder/$prefix")
 ((total_images > 0)) && printf '\n'
 
 (
@@ -104,10 +133,12 @@ done < <(pdfimages -print-filenames "$pdf" "$folder/$folder")
 	ppms=(*.p?m)
 	total=${#ppms[@]}
 	i=0
+	emit_progress "convert" 0 "$total"
 	for f in "${ppms[@]}"; do
 		i=$((i + 1))
 		printf '\r  %d/%d' "$i" "$total"
 		magick "$f" "${f%.*}.png"
+		emit_progress "convert" "$i" "$total"
 	done
 	((total > 0)) && printf '\n'
 	rm -f ./*.ppm ./*.pgm ./*.pbm
@@ -118,6 +149,7 @@ done < <(pdfimages -print-filenames "$pdf" "$folder/$folder")
 	pngs=(*.png)
 	total=${#pngs[@]}
 	i=0
+	emit_progress "purge" 0 "$total"
 	for img in "${pngs[@]}"; do
 		i=$((i + 1))
 		printf '\r  %d/%d' "$i" "$total"
@@ -128,6 +160,7 @@ done < <(pdfimages -print-filenames "$pdf" "$folder/$folder")
 		if ((w < MIN_DIMENSION_PX || h < MIN_DIMENSION_PX)); then
 			rm -f "$img"
 		fi
+		emit_progress "purge" "$i" "$total"
 	done
 	((total > 0)) && printf '\n'
 
@@ -143,6 +176,7 @@ done < <(pdfimages -print-filenames "$pdf" "$folder/$folder")
 	orphan_mask_count=0
 	total=${#file_by_idx[@]}
 	i=0
+	emit_progress "composite" 0 "$total"
 
 	# A soft mask always immediately follows the image it belongs to in
 	# pdfimages' numbering, so idx+1 is enough to find its mask, if any.
@@ -162,6 +196,7 @@ done < <(pdfimages -print-filenames "$pdf" "$folder/$folder")
 			mv -- "$base" opaque/
 			((single_count++))
 		fi
+		emit_progress "composite" "$i" "$total"
 	done
 	((total > 0)) && printf '\n'
 
@@ -184,6 +219,7 @@ done < <(pdfimages -print-filenames "$pdf" "$folder/$folder")
 	dedupe_files=(transparent/*.png opaque/*.png)
 	total=${#dedupe_files[@]}
 	i=0
+	emit_progress "dedupe" 0 "$total"
 	for f in "${dedupe_files[@]}"; do
 		i=$((i + 1))
 		printf '\r  %d/%d' "$i" "$total"
@@ -195,6 +231,7 @@ done < <(pdfimages -print-filenames "$pdf" "$folder/$folder")
 		else
 			seen_sig[$sig]="$f"
 		fi
+		emit_progress "dedupe" "$i" "$total"
 	done
 	((total > 0)) && printf '\n'
 
@@ -204,8 +241,7 @@ done < <(pdfimages -print-filenames "$pdf" "$folder/$folder")
 if ((WEBP == 1)); then
 	if [[ -x "$WEBP_CONVERT" ]]; then
 		echo "* Converting to webp"
-		"$WEBP_CONVERT" --apply "$folder/transparent"
-		"$WEBP_CONVERT" --apply "$folder/opaque"
+		"$WEBP_CONVERT" --apply "$folder/transparent" "$folder/opaque"
 	else
 		echo "* Skipping webp conversion: $WEBP_CONVERT not found or not executable" >&2
 	fi

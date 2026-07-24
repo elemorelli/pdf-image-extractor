@@ -1,14 +1,24 @@
 #!/usr/bin/env bash
-# Converts jpg/png images in a directory to webp, deleting the originals.
-# Dry-run by default; pass --apply to actually convert and delete.
+# Converts jpg/png images in one or more directories to webp, deleting the
+# originals. Dry-run by default; pass --apply to actually convert and
+# delete. Multiple directories share one combined progress count.
 #
 # Requires: libwebp-tools (cwebp). Fedora: sudo dnf install libwebp-tools
 
 set -euo pipefail
 
+emit_progress() {
+	local stage="$1" done="${2:-}" total="${3:-}"
+	if [[ -n "$done" && -n "$total" ]]; then
+		printf '##PROGRESS##{"stage":"%s","done":%s,"total":%s}\n' "$stage" "$done" "$total"
+	else
+		printf '##PROGRESS##{"stage":"%s"}\n' "$stage"
+	fi
+}
+
 DRY_RUN=true
 QUALITY=90
-TARGET_DIR="."
+TARGET_DIRS=()
 
 for arg in "$@"; do
 	case "$arg" in
@@ -23,15 +33,21 @@ for arg in "$@"; do
 		QUALITY="${arg#--quality=}"
 		;;
 	*)
-		TARGET_DIR="$arg"
+		TARGET_DIRS+=("$arg")
 		;;
 	esac
 done
 
-if [[ ! -d "$TARGET_DIR" ]]; then
-	echo "Error: '$TARGET_DIR' is not a directory" >&2
-	exit 1
+if [[ ${#TARGET_DIRS[@]} -eq 0 ]]; then
+	TARGET_DIRS=(".")
 fi
+
+for dir in "${TARGET_DIRS[@]}"; do
+	if [[ ! -d "$dir" ]]; then
+		echo "Error: '$dir' is not a directory" >&2
+		exit 1
+	fi
+done
 
 do_convert_webp() {
 	local dir="$1" file="$2"
@@ -52,10 +68,23 @@ do_convert_webp() {
 }
 
 shopt -s nullglob
-files=("$TARGET_DIR"/*.jpg "$TARGET_DIR"/*.jpeg "$TARGET_DIR"/*.png "$TARGET_DIR"/*.JPG "$TARGET_DIR"/*.JPEG "$TARGET_DIR"/*.PNG)
 
-for f in "${files[@]}"; do
-	do_convert_webp "$TARGET_DIR" "$(basename "$f")"
+all_files=()
+for dir in "${TARGET_DIRS[@]}"; do
+	for f in "$dir"/*.jpg "$dir"/*.jpeg "$dir"/*.png "$dir"/*.JPG "$dir"/*.JPEG "$dir"/*.PNG; do
+		all_files+=("$dir|$(basename "$f")")
+	done
+done
+
+total=${#all_files[@]}
+i=0
+emit_progress "webp" 0 "$total"
+for entry in "${all_files[@]}"; do
+	dir="${entry%%|*}"
+	file="${entry#*|}"
+	do_convert_webp "$dir" "$file"
+	i=$((i + 1))
+	emit_progress "webp" "$i" "$total"
 done
 
 if $DRY_RUN; then

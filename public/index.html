@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>PDF Image Extractor</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="/" class="app-name">PDF Image Extractor</a>
+      <nav>
+        <a href="/jobs">Jobs</a>
+      </nav>
+    </header>
+    <h1>Upload a PDF</h1>
+    <form id="upload-form">
+      <div id="dropzone" class="dropzone" tabindex="0">
+        <p class="dropzone-prompt">Drag &amp; drop a PDF here, or click to browse.</p>
+        <div class="dropzone-file" hidden>
+          <span id="dropzone-filename"></span>
+          <span id="dropzone-filesize" class="text-muted"></span>
+          <button
+            type="button"
+            id="dropzone-clear"
+            class="btn btn-icon"
+            aria-label="Remove file"
+          ></button>
+        </div>
+        <input type="file" id="pdf-input" name="pdf" accept="application/pdf" hidden />
+      </div>
+      <p id="dropzone-error" class="field-error" hidden></p>
+      <label class="toggle">
+        <input type="checkbox" name="webp" />
+        <span>Convert to WebP</span>
+      </label>
+      <button type="submit" id="submit-button" class="btn btn-primary" disabled>
+        Extract images
+      </button>
+    </form>
+    <div id="progress" class="card" hidden>
+      <div class="progress-header">
+        <p id="progress-text"></p>
+        <button id="cancel-button" class="btn btn-danger">Cancel</button>
+      </div>
+      <ol id="stepper" class="stepper"></ol>
+      <div class="progress-bar">
+        <div id="progress-bar-fill" class="progress-bar-fill"></div>
+      </div>
+    </div>
+    <p id="error-text"></p>
+    <script type="module" src="/dist/upload.js"></script>
+  </body>
+</html>
